@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="description" content="Install LinkUp and open a friend’s invitation.">
+  <title>Your LinkUp invitation</title>
+  <link rel="icon" href="linkup-mark.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="invite.css">
+  <script src="invite.js" defer></script>
+</head>
+<body>
+  <main>
+    <img class="logo" src="linkup-logo.svg" alt="LinkUp" width="156" height="43">
+    <p class="eyebrow">A CONVERSATION STARTS HERE</p>
+    <h1 id="heading">Stay close.<br>Talk freely.</h1>
+    <p id="intro" class="intro">Get LinkUp, then scan your friend’s code again to connect.</p>
+    <p id="error" role="alert" hidden>This invitation link is incomplete. Ask your friend for a fresh code or link.</p>
+    <section aria-label="Get started">
+      <div class="step"><span class="number" aria-hidden="true">1</span><div><h2>Get the app</h2><p id="availability">LinkUp is currently available for Android 7 and newer on a 64-bit ARM phone.</p></div></div>
+      <a id="download" class="button" href="https://github.com/KTihana/LinkUp/releases/latest" target="_blank" rel="noopener noreferrer">Get LinkUp for Android <span aria-hidden="true">↗</span></a>
+      <p class="small" id="install-help">Install the Android APK from the release page and set up LinkUp. Keep this page open for the next step.</p>
+    </section>
+    <section id="invitation" aria-label="Open your invitation" hidden>
+      <div class="step"><span class="number" aria-hidden="true">2</span><div><h2>Come back and connect</h2><p>Already installed? You can open your invitation now. LinkUp checks it before you add anyone.</p></div></div>
+      <a id="open" class="button secondary">Open invitation in LinkUp</a>
+      <p class="small">If LinkUp isn’t installed yet, finish step 1 first. Then return here and tap the button above.</p>
+      <details id="fallback"><summary>Having trouble opening the app?</summary><p>In LinkUp, go to Friends → Add a friend and paste this invitation.</p><label for="code">Invitation</label><textarea id="code" readonly rows="3" spellcheck="false"></textarea><button id="copy" type="button" class="button secondary">Copy invitation</button><p id="copy-status" class="small" role="status"></p></details>
+    </section>
+    <noscript><p>To open a friend’s invitation, enable JavaScript, or install LinkUp and scan their QR code from Friends → Add a friend.</p></noscript>
+    <footer>LinkUp · Made for people</footer>
+  </main>
+</body>
+</html>
