@@ -1,10 +1,10 @@
-# Tiho
+# LinkUp
 
 An experimental free-software messenger for Android. Modern chat screens, editable profiles, QR/link invitations, emojis, stickers, and custom light/dark appearance.
 
 ## Download
 
-[Download the Android APK from Releases](https://github.com/KTihana/Tiho/releases/latest). Android 7 or newer on a 64-bit ARM phone is required. Install over the previous build without uninstalling to retain its data.
+[Download the Android APK from Releases](https://github.com/KTihana/LinkUp/releases/latest). Android 7 or newer on a 64-bit ARM phone is required. Install over the previous build without uninstalling to retain its data.
 
 New identities start as **Anon**. Tap your initial vault key to copy it. Appearance changes use explicit **Save appearance** and **Cancel**. **You → Updates** checks this repository for publisher-signed APK updates; automatic checks wait for unlock and respect Nearby only. Android asks you to approve installation.
 
