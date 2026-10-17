@@ -32,11 +32,12 @@ function iconSvg(scale, fill = brandBlue, background = '') {
 async function png(svg, filename, size = 1024) {
   await sharp(Buffer.from(svg)).resize(size, size).png().toFile(resolve(assets, filename));
 }
-// The adaptive artwork stays inside Android's circular safe area.
+// Android uses a transparent backdrop and a larger mark within its safe area.
 await png(iconSvg(1.12, brandBlue, paper), 'icon.png');
-await png(iconSvg(.72), 'android-icon-foreground.png');
-await png(iconSvg(.72, '#000000'), 'android-icon-monochrome.png');
-await sharp({ create: { width: 1024, height: 1024, channels: 3, background: paper } }).png().toFile(resolve(assets, 'android-icon-background.png'));
+await png(iconSvg(1.32), 'android-icon.png');
+await png(iconSvg(.86), 'android-icon-foreground.png');
+await png(iconSvg(.86, '#000000'), 'android-icon-monochrome.png');
+await sharp({ create: { width: 1024, height: 1024, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } }).png().toFile(resolve(assets, 'android-icon-background.png'));
 await png(iconSvg(1.3, brandBlue, paper), 'favicon.png', 64);
 await png(iconSvg(1.12), 'splash-icon.png');
 await png(iconSvg(1.12, '#A4B7FF'), 'splash-icon-dark.png');

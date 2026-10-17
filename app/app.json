@@ -3,7 +3,7 @@
     "name": "LinkUp",
     "slug": "common",
     "scheme": "common",
-    "version": "0.3.0",
+    "version": "0.3.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -17,14 +17,14 @@
         "android.permission.SYSTEM_ALERT_WINDOW"
       ],
       "adaptiveIcon": {
-        "backgroundColor": "#FAFAF6",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
       "package": "org.commonchat.app",
-      "versionCode": 9
+      "versionCode": 10,
+      "icon": "./assets/android-icon.png"
     },
     "web": {
       "favicon": "./assets/favicon.png"

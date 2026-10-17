@@ -39,7 +39,7 @@ if (!process.argv.includes('--init')) {
   const apk = await readFile(resolve(root, 'artifacts', file));
   const payload = JSON.stringify({ schema: 1, packageName: config.android.package, version: config.version,
     versionCode: config.android.versionCode, minSdk: 24, abi: 'arm64-v8a', file, sha256: createHash('sha256').update(apk).digest('hex'),
-    bytes: apk.length, publishedAt: new Date().toISOString(), notes: 'Chat, call, and connect with friends on LinkUp for Android.' });
+    bytes: apk.length, publishedAt: new Date().toISOString(), notes: 'Larger linked-bubble launcher icon with a transparent background.' });
   const signature = bytesToHex(ed25519.sign(utf8ToBytes('Tiho Android release v1\n' + payload), key));
   await writeFile(resolve(root, 'artifacts/tiho-update-v1.json'), JSON.stringify({ payload, signature }) + '\n');
   console.log(`Prepared signed release v${config.version}. Publish APK, signed manifest, checksum and corresponding source together.`);

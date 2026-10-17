@@ -1,6 +1,6 @@
 {
   "name": "linkup-messenger",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "main": "linkup-entry.js",
   "dependencies": {
     "@config-plugins/react-native-webrtc": "15.0.2",
