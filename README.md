@@ -4,7 +4,7 @@ An experimental free-software messenger with encrypted chats, calls, groups, and
 
 **[Download LinkUp 0.3.0 for Android](https://github.com/KTihana/LinkUp/releases/latest)** · Android 7+ · ARM64
 
-Install over the existing app to keep your account and chats. New invitation QR codes open an install page for friends who do not have LinkUp yet.
+Update LinkUp without uninstalling it to keep your chats. Friends can scan your QR code to download the app.
 
 ## Development
 
