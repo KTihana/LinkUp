@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-only
+import { ThemedSwitch } from '../ui/ThemedSwitch';
 import appConfig from '../../app.json';
 import { controlRadius } from '../ui/shapes';
 import React, { useState } from 'react';
-import { Platform, Pressable, ScrollView, Switch, View } from 'react-native';
+import { Platform, Pressable, ScrollView, View } from 'react-native';
 import { Text, TextInput } from '../ui/Typography';
 import { Feather } from '@expo/vector-icons';
 import { useAppearance } from '../appearance/AppearanceProvider';
@@ -31,7 +32,7 @@ function ReadyUpdatesPanel() {
       {['checking', 'downloading'].includes(updates.status) && button('Cancel', updates.cancel, false, true)}
       <Text style={{ ...text, fontWeight: '600' }}>GitHub release source</Text>
       <TextInput accessibilityLabel="GitHub release repository" value={repository} onChangeText={setRepository} editable={!busy} placeholder="owner/repository" placeholderTextColor={colors.sub} autoCapitalize="none" autoCorrect={false} style={{ ...text, backgroundColor: colors.soft, borderRadius: 16, padding: 16 }} />
-      <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}><Text style={{ ...text, flex: 1 }}>Check automatically</Text><Switch accessibilityLabel="Check automatically for updates" disabled={busy} value={automatic} onValueChange={setAutomatic} trackColor={{ false: colors.line, true: colors.brand }} /></View>
+      <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}><Text style={{ ...text, flex: 1 }}>Check automatically</Text><ThemedSwitch accessibilityLabel="Check automatically for updates" disabled={busy} value={automatic} onValueChange={setAutomatic} /></View>
       <Text style={{ color: colors.sub, fontSize: 13, lineHeight: 20 }}>{updates.automaticPaused ? 'Automatic checks are paused while Nearby only is on. Check for updates contacts GitHub when you choose it.' : 'Automatic checks run after you unlock LinkUp. Downloads and installation always need your approval.'}</Text>
       {button(saving ? 'Saving…' : 'Save update settings', () => void save(), busy || !dirty, true)}
       {problem && <Text accessibilityRole="alert" style={{ color: colors.error }}>{problem}</Text>}

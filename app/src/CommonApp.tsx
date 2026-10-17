@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-only
+import { ThemedSwitch } from './ui/ThemedSwitch';
 import { controlRadius } from './ui/shapes';
 import React, { useEffect, useRef, useState } from 'react';
-import { Image, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StatusBar, StyleSheet, Switch, View } from 'react-native';
+import { Image, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StatusBar, StyleSheet, View } from 'react-native';
 import { Text, TextInput } from './ui/Typography';
 import { ChatBubbleIcon } from './ui/ChatBubbleIcon';
 import { BrandLogo } from './brand/BrandLogo';
@@ -184,7 +185,7 @@ function AccountApp({ invitationInput, nearbyInput }: { invitationInput?: string
       <View style={s.profileHero}><Avatar name={profile.name} photo={profile.photo} large /><View style={s.flex}><Text style={s.profileName}>{profile.name}</Text>{!!profile.about && <Text style={s.bio}>{profile.about}</Text>}<Pressable accessibilityRole="button" accessibilityLabel="Edit profile" onPress={() => { setDraft(profile); setError(''); setScreen('Edit profile'); }} style={{ paddingVertical: 8 }}><Text style={s.save}>Edit profile</Text></Pressable></View><Action icon="grid" label="My invitation QR code" onPress={() => setScreen('Invite a friend')} /></View>
       <Text style={s.sectionLabel}>PERSONALIZE</Text><View style={s.settingsGroup}>{setting('Appearance', 'sun', 'Appearance', preferences.theme)}{setting('App lock', 'lock', 'Local vault')}{setting('Notifications', 'bell', 'Notifications')}</View>
       <Text style={s.sectionLabel}>CONNECT</Text><View style={s.settingsGroup}>{setting('Connection', 'wifi', 'Connection')}{setting('Invite a friend', 'user-plus', 'Invite a friend')}{setting('Updates', 'download-cloud', 'Updates', updates.release?.version ?? '')}</View>
-      <View style={s.setting}><Icon name="activity" size={21} /><View style={s.flex}><Text style={s.settingName}>Online status</Text><Text style={s.small}>Sharing is not enabled yet</Text></View><Switch accessibilityLabel="Show when I’m online" value={online} onValueChange={setOnline} trackColor={{ false: colors.line, true: colors.brand }} /></View>
+      <View style={s.setting}><Icon name="activity" size={21} /><View style={s.flex}><Text style={s.settingName}>Online status</Text><Text style={s.small}>Sharing is not enabled yet</Text></View><ThemedSwitch accessibilityLabel="Show when I’m online" value={online} onValueChange={setOnline} /></View>
       <Text style={s.buildLabel}>LinkUp · Made for people</Text>
     </ScrollView></>}
 

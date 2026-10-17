@@ -62,7 +62,10 @@ await run(process.execPath, [join(root, 'scripts/prepare-release.mjs'), '--init'
 await run(process.execPath, [join(root, 'scripts/build-wireguard.mjs')]);
 await run(process.execPath, [join(root, 'scripts/build-openssl.mjs')]);
 if (!process.argv.includes('--sign-existing')) {
-  await run(join(root, 'node_modules/.bin/expo'), ['prebuild', '--platform', 'android', '--no-install']);
+  // JS/style-only updates can reuse native outputs; prebuild still applies config.
+  const prebuildArgs = ['prebuild', '--platform', 'android', '--no-install'];
+  if (process.argv.includes('--incremental')) prebuildArgs.push('--no-clean');
+  await run(join(root, 'node_modules/.bin/expo'), prebuildArgs);
   await run('./gradlew', [':app:assembleRelease', `-PreactNativeArchitectures=${architecture}`, '-I', join(root, 'scripts/android-build-limits.gradle'), '--max-workers=1', '--console=plain', '--no-daemon'], join(root, 'android'));
 }
 const built = join(root, 'android/app/build/outputs/apk/release/app-release.apk');
