@@ -76,21 +76,10 @@ Send each `<account identity>.json` only to its corresponding phone owner. They 
 
 Both phones must use the new app, add each other through LinkUp invitations, and connect the enrolled private network. One selects the other friend and taps **Start private connection**. Send or scan that signed, short-lived connection code on the other phone. It pins the selected friend's identity, overlay address and TLS certificate. The QR code contains public connection details, not private keys.
 
-Test with two phones on different internet connections:
-
-1. Verify each tunnel is up and both phones exchange messages in both directions. A tunnel interface being up is not proof that the hub or peer is reachable. Check `wg show wg-linkup latest-handshakes` on the hub without exporting private configuration.
-2. Block the hub UDP port or stop the tunnel. Messages must remain queued; mailbox, Wi-Fi and cellular fallback must not deliver them. Reconnect and create a new friend session to resume.
-3. Revoke VPN consent, lock LinkUp, remove the app from recents, and expire the configuration. Confirm the tunnel and private friend sockets stop as intended on each supported Android version.
-4. Enroll a third phone without granting it a particular pair. Confirm the hub rejects that pair, other phone ports, hub management addresses, and internet destinations through the tunnel.
-5. Reset one LinkUp account. Its local VPN key and configuration must be erased; its old enrollment must not restore access to the new account. Remove the old device from the hub policy as well.
-6. Confirm Android screenshots and recents previews hide LinkUp content. Test notifications separately; their opt-in background-key access is a distinct trust boundary and private-network messaging is foreground-only.
-
-These checks require actual devices and a deployed hub. Local unit tests and a successful APK build do not establish cross-network operation or eliminate security defects.
-
 ## Renew or revoke
 
 Stop `wg-quick@wg-linkup.service` before replacing peer lists. Remove revoked devices and pairs from the policy, obtain fresh signed enrollments as needed, set a new expiry, and generate a fresh output directory. Install the new configurations and expiry files, run `systemctl daemon-reload`, restart the expiry timer, then start the interface. Distribute each updated phone configuration. Replacing the full peer list removes revoked public keys; a previously connected device must not retain a stale live peer entry.
 
 Store the hub private key at mode 0600 in its private directory. Do not commit generated operational policies or keys. Do not enable packet captures or verbose per-user logs by default. Source code and public templates belong in the repository; deploy-specific material belongs in a protected directory outside release archives.
 
-The official [WireGuard quick start](https://www.wireguard.com/quickstart/) documents key creation and keepalives. [Android VPN documentation](https://developer.android.com/develop/connectivity/vpn) describes consent and routing. See [LinkUp security status](../../app/SECURITY.md) for the unaudited MLS implementation, endpoint and metadata limitations, and release gates.
+The official [WireGuard quick start](https://www.wireguard.com/quickstart/) documents key creation and keepalives. [Android VPN documentation](https://developer.android.com/develop/connectivity/vpn) describes consent and routing.

@@ -1,6 +1,6 @@
 # Android notifications and quick replies
 
-Implemented in LinkUp 0.2.1 / Android versionCode 4. Android 9+ and a secure phone screen lock are required for background key access. This is an experimental implementation; physical-phone delivery, Android battery behavior and a public push-enabled mailbox still need validation.
+Android 9+, a secure screen lock, a UnifiedPush distributor and a configured HTTPS mailbox are required.
 
 ## Set up
 
@@ -19,11 +19,4 @@ Previews are off by default. The push provider never receives chat text or messa
 
 The background engine and UI share one JS runtime and a write serializer. Every background transaction opens the newest encrypted vault and rechecks delivery policy. Native synchronous revocation also prevents retained signing callbacks from continuing after Nearby only, Pause, Disable or device lock. Foreground native edits merge the latest same-identity encrypted record; web retains its existing stale-write refusal and cross-tab lock policy.
 
-## Limits and phone checks
-
-- Test with two physical Android phones on different networks, with each manufacturer's battery settings. Android force-stop prevents delivery until the app is reopened. WorkManager/Doze quotas and network or distributor outages can delay alerts; there is no absolute delivery-time guarantee.
-- Verify quick reply with the app foreground, background, process removed, phone locked/unlocked, notification permission denied and biometric/vault lock enabled. Test repeated taps, multiple groups, offline retry, long-lived unsent replies, device reboot and upgrade from 0.2.0.
-- Verify TLS, allowed-origin/DNS restrictions, subscription renewal/expiry, provider endpoint rotation and temporary failure. Subscriptions expire after 30 days and are refreshed when the app runs; a phone unused beyond that period needs to reconnect.
-- Verify no reply is duplicated after a crash between encrypted queue persistence and native acknowledgement; pending groups cannot send or show conversation contents before Join; group invitations have no Reply action.
-- Test Nearby only or Pause while an HTTP challenge is outstanding: subsequent background signatures must be revoked. Test disabling access during a task, changing/removing the phone's screen lock, disk full and corrupted storage. Never log real recovery keys or message text.
-- This implements Android message notifications, not background call ringing, group calls, iOS/APNs or browser push.
+Android force-stop prevents delivery until the app is reopened. Background call ringing, group calls, iOS push and browser push are not included.

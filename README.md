@@ -1,22 +1,18 @@
 # LinkUp
 
-An experimental free-software messenger with encrypted chats, calls, groups, and QR invitations.
+Chat, call, and connect with friends.
 
-**[Download LinkUp 0.3.0 for Android](https://github.com/KTihana/LinkUp/releases/latest)** · Android 7+ · ARM64
+**[Download for Android](https://github.com/KTihana/LinkUp/releases/latest)**
 
-Update LinkUp without uninstalling it to keep your chats. Friends can scan your QR code to download the app.
+## Screenshots
 
-## Development
+App screens with sample conversations.
 
-Use Node.js 24+. From `app/`:
+<table>
+<tr><td><img src="docs/screenshots/chats.png" width="220" alt="Chats"></td><td><img src="docs/screenshots/conversation.png" width="220" alt="Conversation"></td><td><img src="docs/screenshots/friends.png" width="220" alt="Friends"></td></tr>
+<tr><td><img src="docs/screenshots/profile.png" width="220" alt="Profile"></td><td><img src="docs/screenshots/appearance.png" width="220" alt="Appearance settings"></td><td><img src="docs/screenshots/dark-mode.png" width="220" alt="Dark mode"></td></tr>
+</table>
 
-```sh
-npm ci
-npm run web
-```
+[Build instructions](app/BUILD.md) · [Server setup](deploy/README.md) · [Publishing updates](app/UPDATES.md)
 
-See [Android builds and testing](app/ANDROID-TESTING.md), [mailbox setup](relay/README.md), and [release publishing](app/UPDATES.md). Mailbox delivery requires a configured server; no public server is included.
-
-This is a test build. Physical two-phone testing and independent security review remain pending. iPhone support is unfinished.
-
-GPL-3.0-only. Source, dependency notices, and build instructions are included here and with the release.
+GPL-3.0-only. Required dependency licenses are included with the source.

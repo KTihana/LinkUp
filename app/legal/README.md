@@ -11,7 +11,7 @@ Before public distribution:
 - Collect the other JavaScript and Android runtime dependency notices, then ship the complete notice bundle with the APK and expose it in the app.
 - Keep corresponding Tiho source, build instructions and license available with each distributed release.
 
-The files in this directory are a partial collection. The production release notice gate remains open in `../../READINESS.md`.
+The files in this directory are a partial collection. Retain this inventory and the collected notices with redistributed source.
 
 The interface uses Manrope. `manrope-font-OFL.txt` preserves the font's SIL Open Font License; `manrope-package-MIT.txt` preserves the font package wrapper's separate MIT notice. Fonts are bundled locally and are not fetched from a third-party font service at runtime.
 

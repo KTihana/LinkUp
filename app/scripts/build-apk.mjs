@@ -155,8 +155,8 @@ await run(process.execPath, [join(root, 'scripts/prepare-release.mjs')]);
 const sourceDir = await mkdtemp(join(artifacts, 'source-'));
 const sourceName = `tiho-${version}-source.zip`;
 try {
-  await run('zip', ['-q', '-r', join(sourceDir, sourceName), 'app', 'relay', 'deploy', 'docs', 'LICENSE', 'README.md', 'IMPLEMENTATION.md', 'PRODUCT-NOTES.md', 'READINESS.md',
-    '-x', 'app/node_modules/*', 'relay/node_modules/*', 'app/android/*', 'app/ios/*', 'app/.expo/*', 'app/.signing/*',
+  await run('zip', ['-q', '-r', join(sourceDir, sourceName), 'app', 'relay', 'deploy', 'docs', 'LICENSE', 'README.md',
+    '-x', 'app/AGENTS.md', 'app/node_modules/*', 'relay/node_modules/*', 'app/android/*', 'app/ios/*', 'app/.expo/*', 'app/.signing/*',
     'app/.native-deps/*', 'app/artifacts/*', 'app/dist/*', 'app/dist-android/*', 'app/.env*', 'relay/.env*', 'relay/data/*',
     'deploy/.private/*', 'deploy/.env', 'deploy/certificates/*', 'deploy/vpn-output*/*', 'deploy/vpn/policy*.json',
     'app/modules/*/android/build/*', 'app/modules/*/android/.gradle/*', 'app/modules/*/android/.cxx/*',

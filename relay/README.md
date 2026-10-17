@@ -13,7 +13,7 @@ Defaults: `127.0.0.1:8787`, data in `./data`, browser origins `http://127.0.0.1:
 
 Binding to another address requires `ALLOW_PUBLIC_BIND=true`. That switch only permits the binding; it does not make the prototype suitable for the internet. Use an HTTPS reverse proxy, upstream abuse controls, monitored storage, and a protocol/integration review before public deployment. This server ignores forwarded IP headers; limits behind a proxy apply to the proxy's source address. The included rate limits are intended for a small development deployment.
 
-For testing physical phones on a trusted local network, put the relay behind an HTTPS reverse proxy with a certificate trusted by those devices. Use development identities and point the apps to that HTTPS address, rather than their own `127.0.0.1`. The client permits plain HTTP only for literal loopback development addresses. Bind the relay to loopback behind the proxy when they share a computer; another bind address requires explicit `ALLOW_PUBLIC_BIND=true`.
+For phones on a local network, put the relay behind an HTTPS reverse proxy with a certificate trusted by those devices. Point the apps to that HTTPS address, rather than their own `127.0.0.1`. The client permits plain HTTP only for literal loopback development addresses. Bind the relay to loopback behind the proxy when they share a computer; another bind address requires explicit `ALLOW_PUBLIC_BIND=true`.
 
 ## Signed HTTP API
 
@@ -102,7 +102,6 @@ HTTP limits: 256 KiB body, 192 KiB signed payload, 8 KiB headers, 128 connection
 
 ## Validation
 
-`npm test` exercises real HTTP signatures, replay and domain binding, offline persistence/restart, sender and recipient authorization, stranger claim/publication rejection, revisioned revocation, delayed grant rejection, safe legacy migration, failed durable revocation, TTL, retries, quota failures, public package ownership/claim concurrency/restart and owner-only status, input limits, origins, corruption and writer exclusion. The service has not received an independent security audit.
 
 Implementation references: [Node crypto](https://nodejs.org/api/crypto.html), [Node HTTP](https://nodejs.org/api/http.html), and [Node filesystem](https://nodejs.org/api/fs.html).
 
@@ -126,4 +125,4 @@ The identity-signed APIs are:
 
 A successful mailbox publish durably marks a registered recipient for wakeup. The dispatcher encrypts a content-free `mailbox-wake` hint using RFC 8291 Web Push. It coalesces rapid publishes, bounds concurrency, retries failures with backoff and removes 404/410 endpoints. A revision prevents mail arriving during an in-flight push from losing its next wakeup. Startup recovers pending ciphertext/subscription wakeups. A successful provider response means the wakeup was accepted by that provider; it does not mean the phone received or read a chat.
 
-Group messages use the same opaque pairwise envelopes. Group names, rosters and text are inside MLS application messages; the mailbox sees their individual routing recipients and timing. See `app/NOTIFICATIONS.md` in the source tree for the Android opt-in/security model and real-device checks.
+Group messages use the same opaque pairwise envelopes. Group names, rosters and text are inside MLS application messages; the mailbox sees their individual routing recipients and timing. See `app/NOTIFICATIONS.md` in the source tree for the Android opt-in/security model and access requirements.

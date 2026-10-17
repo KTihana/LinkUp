@@ -39,7 +39,7 @@ if (!process.argv.includes('--init')) {
   const apk = await readFile(resolve(root, 'artifacts', file));
   const payload = JSON.stringify({ schema: 1, packageName: config.android.package, version: config.version,
     versionCode: config.android.versionCode, minSdk: 24, abi: 'arm64-v8a', file, sha256: createHash('sha256').update(apk).digest('hex'),
-    bytes: apk.length, publishedAt: new Date().toISOString(), notes: 'Security test build: automatic MLS key renewal for new sessions, friend-only mailbox admission and revocation, safer update/SDP validation, Android screenshot protection, patched OpenSSL and rebuilt WireGuard engines, and a WireGuard private-network prototype with self-hosted setup. Update both phones and the mailbox; reconnect existing chats to enable key renewal. VPN requires your own server and is Android 9+; private-network calls are disabled pending routing verification. Experimental and unaudited; two-phone network and hardware tests remain required.' });
+    bytes: apk.length, publishedAt: new Date().toISOString(), notes: 'Chat, call, and connect with friends on LinkUp for Android.' });
   const signature = bytesToHex(ed25519.sign(utf8ToBytes('Tiho Android release v1\n' + payload), key));
   await writeFile(resolve(root, 'artifacts/tiho-update-v1.json'), JSON.stringify({ payload, signature }) + '\n');
   console.log(`Prepared signed release v${config.version}. Publish APK, signed manifest, checksum and corresponding source together.`);
