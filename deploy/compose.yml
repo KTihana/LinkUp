@@ -1,0 +1,64 @@
+name: tiho
+services:
+  mailbox:
+    build: ../relay
+    restart: unless-stopped
+    env_file: .private/mailbox.env
+    volumes:
+      - mailbox:/srv/data
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 256m
+    pids_limit: 128
+    networks: [mailbox]
+  https:
+    image: caddy:2.11.7-alpine
+    restart: unless-stopped
+    environment:
+      MAILBOX_DOMAIN: ${MAILBOX_DOMAIN:?Run prepare.mjs first}
+    ports:
+      - '80:80'
+      - '443:443'
+      - '443:443/udp'
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      mailbox: { condition: service_healthy }
+    networks: [mailbox]
+  turn:
+    image: coturn/coturn:4.18.0-r0
+    restart: unless-stopped
+    # Linux host networking avoids a large UDP port mapping/conntrack table.
+    network_mode: host
+    command: ['-c', '/etc/coturn/turnserver.conf']
+    volumes:
+      - type: bind
+        source: ./.private/turnserver.conf
+        target: /etc/coturn/turnserver.conf
+        read_only: true
+        bind: { create_host_path: false }
+      - type: bind
+        source: ./.private/certificates/fullchain.pem
+        target: /etc/tiho/certificates/fullchain.pem
+        read_only: true
+        bind: { create_host_path: false }
+      - type: bind
+        source: ./.private/certificates/privkey.pem
+        target: /etc/tiho/certificates/privkey.pem
+        read_only: true
+        bind: { create_host_path: false }
+    read_only: true
+    tmpfs: ['/tmp:size=16m']
+    mem_limit: 256m
+    pids_limit: 128
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+volumes:
+  mailbox:
+  caddy_data:
+  caddy_config:
+networks:
+  mailbox:

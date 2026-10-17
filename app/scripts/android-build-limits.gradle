@@ -1,0 +1,16 @@
+// SPDX-License-Identifier: GPL-3.0-only
+// Bound Ninja compilation as well as Gradle. max-workers alone does not bound
+// parallel C++ compiler processes on machines with limited memory.
+gradle.beforeProject { project ->
+    ['com.android.application', 'com.android.library'].each { pluginId ->
+        project.pluginManager.withPlugin(pluginId) {
+            project.extensions.getByName('androidComponents').finalizeDsl { android ->
+                android.defaultConfig.externalNativeBuild.cmake.arguments.addAll([
+                    '-DCMAKE_JOB_POOLS=common_compile=2;common_link=1',
+                    '-DCMAKE_JOB_POOL_COMPILE=common_compile',
+                    '-DCMAKE_JOB_POOL_LINK=common_link'
+                ])
+            }
+        }
+    }
+}

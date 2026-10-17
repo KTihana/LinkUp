@@ -1,0 +1,30 @@
+{
+  "reviewDate": "2026-10-16",
+  "javaArtifact": "com.wireguard.android:tunnel:1.0.20260102",
+  "javaArtifactUrl": "https://repo.maven.apache.org/maven2/com/wireguard/android/tunnel/1.0.20260102/tunnel-1.0.20260102.aar",
+  "javaArtifactSha256": "2b9c16db026496123e4db695d26d03d1958a201096c7c4c89b21077dc70f3119",
+  "upstreamSourcesUrl": "https://git.zx2c4.com/wireguard-android/snapshot/wireguard-android-1.0.20260102.tar.xz",
+  "upstreamSourcesSha256": "568dec372db28c043d45098470ec8132a550d6c65579eee3ea8d3ef33eba5f95",
+  "upstreamJniFiles": {
+    "api-android.go": "42cd27f8f4744aaed4d77bb8c1ac6a679501925576050edfec9245a1b6c902c0",
+    "jni.c": "f8758d642c1d2cd1dd1abe45f54b95481006c8b797347dd6e0f35703320b246b"
+  },
+  "wireguardGo": "v0.0.0-20261006164505-2631ce99a06f",
+  "goToolchain": "1.27.2",
+  "nativeSource": "app/native/wireguard",
+  "buildRecipe": "app/scripts/build-wireguard.mjs",
+  "notShipped": [
+    "AAR original Go 1.24.3 JNI library",
+    "libwg.so",
+    "libwg-quick.so"
+  ],
+  "licenses": {
+    "wireguard-android-Apache-2.0.txt": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+    "wireguard-go-MIT.txt": "91276db973f25602d1aa43491f59cbc84cb88e6f151e1d0cc82a755563ce0195",
+    "go-BSD.txt": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+    "x-crypto-BSD.txt": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+    "x-net-BSD.txt": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+    "x-sys-BSD.txt": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad"
+  },
+  "auditLimits": "This provenance record is not an independent security review. Native device VPN, routing and revocation testing remain required."
+}

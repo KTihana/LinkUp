@@ -1,0 +1,38 @@
+OpenSSL in LinkUp for Android — 2026-10-16
+
+Component: OpenSSL 3.6.5, unmodified official sources, Apache License 2.0.
+The license is included in this directory as LICENSE.txt and in the local AAR.
+Official source:
+https://github.com/openssl/openssl/releases/download/openssl-3.6.5/openssl-3.6.5.tar.gz
+SHA-256: a2157c2830efdec3788939b00c9b0638306d3f0bbb76dc4832ee503bb397df98
+
+Build and integration:
+app/scripts/build-openssl.mjs and app/scripts/package-openssl.py rebuild the
+static arm64 Android libraries with NDK 27.1.12297006 and package the same
+opensslstatic::{ssl,crypto} Prefab interface expected by QuickCrypto 1.1.8.
+The CNG plugin substitutes org.linkup.security:openssl-static:3.6.5-1 for
+io.github.ronickg:openssl-static:3.6.2-3. No official OpenSSL or QuickCrypto
+source is patched. QuickCrypto's static-symbol localization is preserved.
+The build approach follows OpenSSL NOTES-ANDROID.md and the ndkports static
+recipe at commit 0f0a617ea8bff654015d8bac407691805f3a193d:
+https://github.com/ronickg/ndkports/blob/0f0a617ea8bff654015d8bac407691805f3a193d/openssl-static/build.gradle.kts
+
+Reason for replacement:
+The Maven package still shipped OpenSSL 3.6.2 on the review date. OpenSSL
+3.6.3, 3.6.4 and 3.6.5 contain security fixes. LinkUp does not establish TLS
+or QUIC sessions through QuickCrypto, and its AES-GCM implementation uses
+EVP_CipherUpdate/Final rather than the EVP_Cipher single-shot path affected
+by CVE-2026-75803 (ChaCha20-Poly1305/AES-OCB). Nonetheless the whole native
+library is updated, rather than treating unused entry points as a waiver.
+Advisories: https://openssl-library.org/news/vulnerabilities-3.6/
+
+Boundaries:
+The generated provenance record in .native-deps/openssl/provenance.json
+ties source, build recipe, NDK version and AAR/POM hashes together. A second
+packaging pass verifies deterministic AAR packaging. This alone does not
+prove independent cross-host reproducibility or that every calling native
+bridge is secure. Real-device testing and independent review remain open.
+The current APK build supports arm64 only. The official 3.6 support window
+ends 2026-11-01; migration to a supported baseline is required before then.
+This replacement does not change the iOS dependency; iOS is not a validated
+release target for this revision.

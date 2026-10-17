@@ -1,0 +1,24 @@
+{
+	admin off
+}
+
+{$MAILBOX_DOMAIN} {
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "no-referrer"
+		-Server
+	}
+	request_body {
+		max_size 256KB
+	}
+	@api path /health /v1/*
+	handle @api {
+		reverse_proxy mailbox:8787 {
+			transport http {
+				response_header_timeout 30s
+			}
+		}
+	}
+	respond 404
+}

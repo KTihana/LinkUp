@@ -1,0 +1,54 @@
+WireGuard build checks — 2026-10-16
+
+Scope: LinkUp's arm64-v8a libwg-go.so built by
+app/scripts/build-wireguard.mjs from app/native/wireguard, Go 1.27.2,
+wireguard-go v0.0.0-20261006164505-2631ce99a06f and the dependencies
+pinned in go.mod/go.sum. This records engineering checks, not an audit.
+
+Built library SHA-256:
+448c2600e49e290952b1a0e7a58300ce54828c450fe5ad135d562f9c0c1a1df0
+
+Completed checks:
+- go mod verify: all downloaded modules verified.
+- LinkUp public-statistics allowlist tests: passed; private_key,
+  preshared_key, endpoints and unrelated UAPI fields are not returned to Java.
+- Upstream wireguard-go device, conn, replay, ratelimiter and tai64n
+  package tests: passed using the pinned dependencies and Go 1.27.2.
+  These use test interfaces/local traffic, not an activated phone VPN.
+- Expected six GoBackend JNI symbols are exported; ELF LOAD segments have
+  16 KiB alignment. Go build metadata matches the pinned compiler/modules.
+- A disposable Android arm64 executable successfully loaded the exact library
+  on emulator-5554 with dlopen(RTLD_NOW) and called wgVersion, confirming
+  revision 2631ce9. Source: app/native/wireguard/version-test.c; exact hashes
+  are recorded in app/artifacts/wireguard-native-loader.json. Both temporary
+  device files were removed. No interface, keys or tunnel were created.
+- Android release compilation and all 22 native JVM checks passed, including
+  the status-poll/socket-enrollment regression. This does not establish actual
+  Android VPN permission, routing or two-phone behavior.
+- govulncheck v1.9.0 source scan, GOOS=android GOARCH=arm64 CGO_ENABLED=1
+  and -tags linux: zero vulnerabilities in imported/called packages.
+
+Scanner caveat:
+The conservative binary scan reports GO-2026-5932 against the required
+golang.org/x/crypto module. That advisory is for its unmaintained OpenPGP
+packages. The exact Android source dependency graph imports no OpenPGP
+package, the source scan reports no affected imported package, and the
+native binary contains no OpenPGP package identifiers. The module-level
+warning is recorded, not suppressed or presented as a clean binary scan.
+Advisory: https://pkg.go.dev/vuln/GO-2026-5932
+
+Bridge review:
+- Java receives only public counters/peer public keys from wgGetConfig.
+- Each C.CString result returned through JNI is freed after NewStringUTF.
+- The unused upstream local UAPI control socket is absent.
+- The Go device logger is silent; no config/private key is logged.
+- Native handle map access, statistics and teardown are serialized.
+- WG private configuration still exists briefly as Java/Go managed-memory
+  objects; reliable zeroization of managed strings is not guaranteed.
+
+Not established by these checks:
+Real Android VPN consent/foreground-service behavior, two-phone hub
+delivery, routing on network changes, revocation/expiry behavior on devices,
+an independent cryptographic review or absence of unknown vulnerabilities.
+The app's private network stops on screen lock; this build does not apply
+WireGuard Android's old runtime patch for a suspend-inclusive Go clock.

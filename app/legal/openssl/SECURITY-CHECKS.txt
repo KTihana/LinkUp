@@ -1,0 +1,39 @@
+OpenSSL native checks — 2026-10-16
+
+Source: official OpenSSL 3.6.5, unchanged, built with NDK 27.1.12297006.
+Source and integration provenance: NOTICE-LinkUp.txt and the generated
+.native-deps/openssl/provenance.json (copied alongside release artifacts).
+
+The source build completed and two packaging passes of its output produced
+the same AAR SHA-256:
+faa8e1a4b216154ef13a42dfaef55278a60006a370ad6ad953a235d2e4018582
+
+A disposable Android arm64 executable linked the exact libcrypto.a from that
+AAR and ran on emulator-5554. It asserted runtime OpenSSL 3.6.5 and passed:
+- SHA-256 ("abc") and HMAC-SHA-256 (RFC 4231 case 1).
+- HKDF-SHA-256 (RFC 5869 A.1).
+- AES-128-GCM known ciphertext/tag, empty plaintext and nonempty plaintext;
+  successful authentication and rejection of modified tags in both cases.
+- X25519 shared secret (RFC 7748 section 6.1).
+- Ed25519 signing/verification (RFC 8032 test 1), altered signature rejection.
+
+Test source: app/native/openssl/primitive-test.c
+Source SHA-256:
+1e85e73f6cd9cf2d1142ad811e824c3d398ad57ca81a19f972a1b80cb0fffa61
+Test executable SHA-256:
+513eb4d938e7b5ad2b92f633f5bb85d78809e458b0bcc22383dda309adafef8a
+Tested libcrypto.a SHA-256:
+4a4b180b671267981474ebf4479c02e449369a43099f907849a7a76b69e5b844
+
+The test exited zero and its disposable executable was removed from the
+emulator. It used published fixed vectors only; no app UI, vault, account
+data, network tunnel or VPN consent was accessed.
+
+The CNG dependency substitution was separately checked for exact local-only
+coordinates, preservation of existing project settings, idempotence, and
+rejection of malformed/unsupported templates.
+
+These tests validate this native library build, not the complete QuickCrypto
+JavaScript bridge, physical-device behavior, or absence of unknown defects.
+Full final APK assembly/runtime checks remain separately required. No clean
+whole-application vulnerability-scan or independent-audit claim is made.

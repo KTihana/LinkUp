@@ -1,0 +1,44 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+dependencies {
+  compileOnly 'com.facebook.react:react-android:0.86.3'
+  implementation 'androidx.core:core:1.17.0'
+  implementation 'androidx.work:work-runtime-ktx:2.11.0'
+  implementation 'org.unifiedpush.android:connector:3.3.5'
+  // The official AAR's Go 1.24.3 runtime is not shipped. The build helper
+  // verifies that AAR, extracts its Java classes and rebuilds JNI with Go 1.27.2.
+  implementation files('../../../.native-deps/wireguard/classes.jar')
+  implementation 'androidx.annotation:annotation:1.9.1'
+  implementation 'androidx.collection:collection:1.5.0'
+  testImplementation 'junit:junit:4.13.2'
+}
+
+group = 'org.commonmessenger.nearby'
+version = '0.1.0'
+
+android {
+  namespace 'expo.modules.commonnearby'
+  sourceSets {
+    main {
+      jniLibs.srcDirs += ['../../../.native-deps/wireguard/jni']
+      assets.srcDirs += ['../../../legal']
+    }
+  }
+  defaultConfig {
+    versionCode 1
+    versionName '0.1.0'
+  }
+}
+
+tasks.register('checkLinkUpWireGuard') {
+  doLast {
+    if (!file('../../../.native-deps/wireguard/classes.jar').isFile() ||
+        !file('../../../.native-deps/wireguard/jni/arm64-v8a/libwg-go.so').isFile()) {
+      throw new GradleException('Run node scripts/build-wireguard.mjs from app/ before building Android.')
+    }
+  }
+}
+tasks.named('preBuild').configure { dependsOn('checkLinkUpWireGuard') }

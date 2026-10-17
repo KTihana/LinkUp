@@ -1,0 +1,83 @@
+{
+  "name": "linkup-messenger",
+  "version": "0.3.0",
+  "main": "linkup-entry.js",
+  "dependencies": {
+    "@config-plugins/react-native-webrtc": "15.0.2",
+    "@expo-google-fonts/manrope": "^0.4.2",
+    "@expo/vector-icons": "^15.0.2",
+    "@noble/ciphers": "2.4.0",
+    "@noble/curves": "2.4.0",
+    "@noble/hashes": "2.4.0",
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "@scure/base": "2.4.0",
+    "expo": "~57.0.28",
+    "expo-asset": "~57.0.20",
+    "expo-camera": "~57.0.6",
+    "expo-clipboard": "~57.0.2",
+    "expo-constants": "~57.0.21",
+    "expo-crypto": "~57.0.4",
+    "expo-dev-client": "~57.0.20",
+    "expo-file-system": "~57.0.7",
+    "expo-font": "~57.0.4",
+    "expo-image-manipulator": "~57.0.21",
+    "expo-image-picker": "~57.0.20",
+    "expo-linking": "~57.0.12",
+    "expo-network": "~57.0.2",
+    "expo-router": "~57.0.26",
+    "expo-secure-store": "~57.0.4",
+    "expo-splash-screen": "~57.0.10",
+    "expo-status-bar": "~57.0.1",
+    "qrcode-generator": "2.0.4",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.86.3",
+    "react-native-nitro-modules": "^0.37.1",
+    "react-native-quick-base64": "^3.0.1",
+    "react-native-quick-crypto": "1.1.8",
+    "react-native-reanimated": "4.5.1",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "~4.26.0",
+    "react-native-svg": "15.15.4",
+    "react-native-web": "^0.21.2",
+    "react-native-webrtc": "155.0.0",
+    "react-native-worklets": "0.10.1",
+    "ts-mls": "1.6.4"
+  },
+  "devDependencies": {
+    "@types/react": "~19.2.2",
+    "eslint": "^9.39.5",
+    "eslint-config-expo": "~57.0.2",
+    "jsqr": "^1.4.0",
+    "typescript": "~6.0.3"
+  },
+  "scripts": {
+    "start": "expo start",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "web": "expo start --web",
+    "typecheck": "tsc --noEmit",
+    "build:web": "expo export --platform web",
+    "build:apk": "node scripts/build-apk.mjs",
+    "serve:apk": "node scripts/serve-apk.mjs",
+    "lint": "expo lint",
+    "test": "node --test tests/*.test.mjs",
+    "demo:messaging": "node scripts/messaging-demo.mjs",
+    "demo:browser": "node scripts/browser-pair.mjs",
+    "demo:nearby": "node scripts/nearby-demo.mjs",
+    "start:development": "expo start --dev-client",
+    "build:android:development": "npx eas-cli@latest build --platform android --profile development"
+  },
+  "private": true,
+  "license": "GPL-3.0-only",
+  "overrides": {
+    "xcode": {
+      "uuid": "11.1.1"
+    },
+    "decode-uri-component": "0.5.0",
+    "ts-mls": {
+      "@noble/ciphers": "$@noble/ciphers",
+      "@noble/curves": "$@noble/curves"
+    }
+  }
+}

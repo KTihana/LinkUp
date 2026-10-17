@@ -1,0 +1,20 @@
+{
+  "artifact": "org.unifiedpush.android:connector:3.3.5",
+  "repository": "https://repo.maven.apache.org/maven2/org/unifiedpush/android/connector/3.3.5/",
+  "license": "Apache-2.0",
+  "dependencyNotes": "WorkManager 2.11.0 and Tink 1.23.0 use Apache-2.0. Full native transitive notice collection remains a public-release gate.",
+  "evidence": [
+    {
+      "file": "connector-3.3.5.pom",
+      "sha256": "bd5c29ee71cda841acf1ac867d4e5dc2817d6831ce2cc21b3d528d4e5aa903d7"
+    },
+    {
+      "file": "Apache-2.0.txt",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    },
+    {
+      "file": "linkup-up-sources.jar",
+      "sha256": "6a8c5a253102f87bd0c8776d2bb2dedfab066b2980a89eb107679429a03de671"
+    }
+  ]
+}

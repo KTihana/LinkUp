@@ -1,0 +1,32 @@
+{
+  "release": "jitsi/webrtc v155.0.0",
+  "sourceRevision": "9edb2100fc29f847b5d01def716a979daf397901",
+  "status": "partial; native transitive notices still required",
+  "files": [
+    {
+      "file": "webrtc/LICENSE",
+      "source": "https://raw.githubusercontent.com/jitsi/webrtc/9edb2100fc29f847b5d01def716a979daf397901/LICENSE",
+      "sha256": "ab00a482b6a3902e40211b43c5d0441962ea99b6cc7c25c0f243fa270b78d482"
+    },
+    {
+      "file": "webrtc/PATENTS",
+      "source": "https://raw.githubusercontent.com/jitsi/webrtc/9edb2100fc29f847b5d01def716a979daf397901/PATENTS",
+      "sha256": "01462e2068d1a04c2274f3389773014c14ed9bc3446b28303543bd3e3c064145"
+    },
+    {
+      "file": "webrtc/AUTHORS",
+      "source": "https://raw.githubusercontent.com/jitsi/webrtc/9edb2100fc29f847b5d01def716a979daf397901/AUTHORS",
+      "sha256": "a06c2ce36ff39a2ffbd3ba1b40a69e5ccb805d8f83dafb51dd68e4492b059a7c"
+    },
+    {
+      "file": "react-native-webrtc-MIT.txt",
+      "source": "installed react-native-webrtc 155.0.0 package",
+      "sha256": "4dc60a47d734cd6c09ea05bae1d0b398d62d811bcc7e1618799fbe926ca64f60"
+    },
+    {
+      "file": "event-target-shim-MIT.txt",
+      "source": "installed react-native-webrtc 155.0.0 package",
+      "sha256": "97d87142793695cd73243de7258694abe85b3b6060fca7f247b0a2afa8219678"
+    }
+  ]
+}

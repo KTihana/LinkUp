@@ -1,0 +1,30 @@
+LinkUp private network — third-party notices
+
+WireGuard Android tunnel Java library and JNI bridge sources
+Copyright 2017–2025 WireGuard LLC and the contributors named in the source files.
+Apache License 2.0; see wireguard-android-Apache-2.0.txt.
+https://git.zx2c4.com/wireguard-android/tag/?h=1.0.20260102
+
+WireGuard Go engine, revision 2631ce99a06f27120d581611cf125d68bc6aa565
+MIT license; see wireguard-go-MIT.txt.
+https://git.zx2c4.com/wireguard-go/commit/?id=2631ce99a06f27120d581611cf125d68bc6aa565
+
+Go 1.27.2 runtime and golang.org/x/{crypto,net,sys}
+BSD-style licenses; see the corresponding files here.
+The exact versions/checksums are recorded in app/native/wireguard/go.mod and go.sum.
+
+LinkUp modifications to the Android JNI wrapper (2026-10-16): serialized
+native handles, removed unused UAPI socket and debug logging/signal hook,
+returned public statistics only, and built against current upstream WireGuard
+and Go. The WireGuard protocol and cryptographic engine are not modified.
+
+The old Go JNI binary and the independent wg / wg-quick executables inside
+the Maven AAR are excluded. LinkUp uses only the Go backend. AndroidX
+annotation/collection notices are covered by their separate runtime licences.
+
+Unlike the upstream Android make recipe, this build uses unmodified Go
+runtime clock semantics. This prototype stops at screen lock/background;
+it does not promise a persistent VPN while the phone is sleeping.
+
+To rebuild: node app/scripts/build-wireguard.mjs
+The recipe verifies downloads and Go module checksums. See provenance.json.

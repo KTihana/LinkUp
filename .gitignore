@@ -1,0 +1,16 @@
+.DS_Store
+/design/
+/prototype-preview.html
+deploy/.private/
+deploy/.env
+deploy/certificates/
+deploy/vpn-output*/
+deploy/vpn/policy*.json
+deploy/vpn/*.key
+relay/data/
+relay/node_modules/
+app/modules/*/android/build/
+app/modules/*/android/.gradle/
+app/modules/*/android/.cxx/
+__pycache__/
+*.pyc
