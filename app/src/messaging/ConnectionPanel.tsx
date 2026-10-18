@@ -1,6 +1,7 @@
+import { MotionPressable as Pressable } from '../ui/MotionPressable';
 // SPDX-License-Identifier: GPL-3.0-only
 import React, { useEffect, useRef, useState } from 'react';
-import { BackHandler, Pressable, ScrollView, View } from 'react-native';
+import { BackHandler, ScrollView, View } from 'react-native';
 import { Text, TextInput } from '../ui/Typography';
 import { useAppearance } from '../appearance/AppearanceProvider';
 import { useVault } from '../security/VaultProvider';
@@ -63,13 +64,13 @@ function ConnectionOverview({ onView, onVault }: Pick<Props, 'onView' | 'onVault
   }
   function method(icon: ConnectionIconName, label: string, target: ConnectionView, value: string) {
     return <Pressable accessibilityRole="button" accessibilityLabel={label} accessibilityHint={`Open ${label} settings`} onPress={() => onView(target)}
-      style={({ pressed }) => ({ minHeight: 60, flexDirection: 'row', alignItems: 'center', gap: 12, opacity: pressed ? .6 : 1 })}>
-      <ConnectionIcon name={icon} size={24} color={colors.ink} /><Text style={[s.body, { flex: 1 }]}>{label}</Text>
+      style={({ pressed }) => ({ minHeight: 66, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 14, opacity: pressed ? .6 : 1 })}>
+      <ConnectionIcon name={icon} size={22} color={colors.brand} /><Text style={[s.body, { flex: 1, fontWeight: '600' }]}>{label}</Text>
       <Text style={s.small}>{value}</Text><ConnectionIcon name="chevron-right" size={24} color={colors.sub} />
     </Pressable>;
   }
   return <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
-    <View style={{ paddingHorizontal: 24, paddingTop: 24, gap: 20 }}>
+    <View style={{ paddingHorizontal: 24, paddingTop: 24, gap: 26 }}>
       <View accessibilityLiveRegion="polite" style={[s.card, { minHeight: 80, flexDirection: 'row', alignItems: 'center' }]}>
         <View style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}><ConnectionIcon name="link" size={24} color={colors.brand} /></View>
         <View style={{ flex: 1, gap: 4 }}><Text style={s.name}>{status}</Text><Text style={s.small}>{view.queued} {view.queued === 1 ? 'message' : 'messages'} waiting</Text></View>
@@ -82,12 +83,14 @@ function ConnectionOverview({ onView, onVault }: Pick<Props, 'onView' | 'onVault
           secondary={view.policy !== policy} disabled={working || checking || (vault.status === 'unlocked' && !messaging.preferencesReady)} style={{ flex: 1 }} />)}</View>
         <Text style={s.small}>{view.policy === 'nearby-only' ? 'Mailbox delivery is off. Messages wait here until you connect nearby.' : 'Uses nearby while connected, or your mailbox when nearby is off.'}</Text>
       </View>
-      <View>
+      <View style={{ gap: 10 }}>
         <Text style={s.micro}>CONNECT WITH</Text>
+        <View style={{ backgroundColor: colors.soft, borderRadius: 22, overflow: 'hidden' }}>
         {method('wifi', 'Wi-Fi & hotspot', 'wifi', nearby.kind === 'wifi' || nearby.kind === 'hotspot' ? nearby.phase === 'connected' ? 'Active' : 'Waiting' : 'Nearby')}
         {method('bluetooth', 'Bluetooth', 'bluetooth', nearby.kind === 'bluetooth' ? nearby.phase === 'connected' ? 'Active' : 'Waiting' : 'Nearby')}
         {method('shield', 'Private network', 'vpn', vpn.status.connected ? 'Active' : vpn.status.configured ? 'Saved' : 'Set up')}
         {method('download-cloud', 'Internet mailbox', 'mailbox', !view.endpoint ? 'Set up' : view.policy === 'nearby-only' || !view.enabled ? 'Paused' : 'Configured')}
+        </View>
       </View>
       <View style={[s.card, { flexDirection: 'row', alignItems: 'flex-start' }]}>
         <ConnectionIcon name="shield" size={20} color={colors.brand} />

@@ -3,7 +3,7 @@
     "name": "LinkUp",
     "slug": "common",
     "scheme": "common",
-    "version": "0.3.2",
+    "version": "0.3.3",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -23,7 +23,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "org.commonchat.app",
-      "versionCode": 11,
+      "versionCode": 12,
       "icon": "./assets/android-icon.png"
     },
     "web": {

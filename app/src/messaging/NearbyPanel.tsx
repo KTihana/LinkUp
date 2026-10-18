@@ -1,7 +1,8 @@
+import { MotionPressable as Pressable } from '../ui/MotionPressable';
 // SPDX-License-Identifier: GPL-3.0-only
 import { controlRadius } from '../ui/shapes';
 import React, { useRef, useState } from 'react';
-import { Platform, Pressable, View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { Text, TextInput } from '../ui/Typography';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as Clipboard from 'expo-clipboard';
@@ -59,7 +60,7 @@ export function NearbyPanel({ initialInput = '', mode = 'all', onFriends }: { in
       {unlocked && !active && <>
         <Text style={{ ...text, fontWeight: '600' }}>Choose a friend</Text>
         {!vault.contacts.length && <><Text style={helper}>Add a friend before starting a nearby connection.</Text>{onFriends && <NearbyButton label="Add a friend" onPress={onFriends} />}</>}
-        {vault.contacts.map(c => <Pressable key={c.publicKey} accessibilityRole="button" accessibilityLabel={`Connect nearby with ${c.name} ${c.publicKey.slice(0, 8)}`} accessibilityState={{ selected: peer === c.publicKey }} disabled={working} onPress={() => setPeer(c.publicKey)} style={{ padding: 13, borderRadius: controlRadius.button, backgroundColor: colors.button, borderWidth: 2, borderColor: peer === c.publicKey ? colors.onButton : colors.button }}><Text style={{ ...text, color: colors.onButton }}>{c.name} · {c.publicKey.slice(0, 8)}</Text></Pressable>)}
+        {vault.contacts.map(c => <Pressable key={c.publicKey} accessibilityRole="button" accessibilityLabel={`Connect nearby with ${c.name} ${c.publicKey.slice(0, 8)}`} accessibilityState={{ selected: peer === c.publicKey }} disabled={working} onPress={() => setPeer(c.publicKey)} style={{ minHeight: 58, padding: 16, borderRadius: controlRadius.button, backgroundColor: peer === c.publicKey ? colors.button : colors.soft, justifyContent: 'center' }}><Text style={{ ...text, color: peer === c.publicKey ? colors.onButton : colors.ink, fontWeight: '600' }}>{c.name} · {c.publicKey.slice(0, 8)}</Text></Pressable>)}
       </>}
       {!active && <>
         <Text style={helper}>One person starts the session. The other scans their nearby code below.</Text>
@@ -80,7 +81,7 @@ export function NearbyPanel({ initialInput = '', mode = 'all', onFriends }: { in
       </>}
       {unlocked && <>
         {scanning ? <><CameraView style={{ height: 280, borderRadius: 18, overflow: 'hidden' }} facing="back" barcodeScannerSettings={{ barcodeTypes: ['qr'] }} onBarcodeScanned={({ data }) => { if (scanHandled.current) return; scanHandled.current = true; setInput(data); review(data); }} onMountError={() => { setScanning(false); setProblem('Camera unavailable. Paste the code instead.'); }} /><NearbyButton label="Cancel scan" onPress={() => setScanning(false)} /></> : <NearbyButton label="Scan a nearby code" onPress={scan} disabled={working || active} />}
-        <TextInput accessibilityLabel="Nearby connection code" value={input} onChangeText={value => { setInput(value); setCandidate(null); }} placeholder="Or paste your friend’s nearby code" placeholderTextColor={colors.sub} autoCorrect={false} autoCapitalize="none" multiline maxLength={2048} style={{ padding: 16, borderRadius: 16, backgroundColor: colors.secondary, color: colors.ink, fontSize: 13, minHeight: 95, textAlignVertical: 'top', ...Platform.select({ web: { outlineWidth: 0, outlineStyle: 'solid' as const } }) }} />
+        <TextInput accessibilityLabel="Nearby connection code" value={input} onChangeText={value => { setInput(value); setCandidate(null); }} placeholder="Or paste your friend’s nearby code" placeholderTextColor={colors.sub} autoCorrect={false} autoCapitalize="none" multiline maxLength={2048} style={{ padding: 16, borderRadius: 18, backgroundColor: colors.soft, color: colors.ink, fontSize: 14, minHeight: 100, textAlignVertical: 'top', ...Platform.select({ web: { outlineWidth: 0, outlineStyle: 'solid' as const } }) }} />
         <NearbyButton label="Review nearby code" onPress={() => review()} disabled={working || !input.trim() || active} />
         {candidate?.kind === 'vpn' && !vpn.status.connected && <Text style={helper}>Connect your private network from Connection → Private network, then open this code again.</Text>}
         {candidate && <><Text style={{ ...text, fontWeight: '600' }}>Connect with {candidateName} over {candidate.kind === 'vpn' ? 'private network' : candidate.kind === 'wifi' ? 'Wi-Fi' : 'Bluetooth'}?</Text>{candidate.kind === 'wifi' && candidate.ssid && <><Text selectable style={helper}>Join Wi-Fi: {candidate.ssid}</Text><Text selectable style={helper}>Password: {candidate.password}</Text></>}<NearbyButton label={candidate.kind === 'vpn' ? 'Join private connection' : candidate.kind === 'wifi' ? 'Join nearby Wi-Fi' : 'Find friend over Bluetooth'} onPress={() => perform(() => messaging.joinNearby(input))} disabled={working || active || (candidate.kind === 'vpn' ? !vpn.status.connected : candidate.kind === 'wifi' ? !messaging.capabilities.wifi : !messaging.capabilities.bluetooth)} secondary={false} /></>}

@@ -19,7 +19,7 @@ export function VpnPanel({ onFriends, initialInput }: { onFriends: () => void; i
     try { await task(); } catch (error) { setProblem(error instanceof Error ? error.message : 'Could not update your private network.'); }
     finally { acting.current = false; setWorking(false); }
   }
-  return <View style={{ gap: 20 }}>
+  return <View style={{ gap: 24, paddingBottom: 8 }}>
     <View style={s.card}>
       <ConnectionIcon name="shield" size={28} color={colors.brand} />
       <Text style={s.name}>{status.connected ? 'Private tunnel is on' : status.connecting ? 'Connecting private tunnel…' : 'Your friends. Your network.'}</Text>
@@ -37,7 +37,7 @@ export function VpnPanel({ onFriends, initialInput }: { onFriends: () => void; i
         <ConnectionButton label="Save network configuration" secondary disabled={working || !input.trim() || !status.initialized}
           onPress={() => perform(async () => { await messaging.stopNearby(); await vpn.configure(input); setInput(''); })} />
       </>}
-      {status.config && <View style={s.card}>
+      {status.config && <View style={[s.card, { backgroundColor: colors.secondary }]}>
         <Text style={s.label}>{status.config.label}</Text>
         <Text selectable style={s.small}>Server: {status.config.endpoint}</Text>
         <Text selectable style={s.small}>Hub key: {status.config.hubPublicKey}</Text>

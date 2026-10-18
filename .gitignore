@@ -1,16 +1,23 @@
 .DS_Store
-/design/
-/prototype-preview.html
 deploy/.private/
 deploy/.env
 deploy/certificates/
+relay/data/
+relay/node_modules/
+
+# Private-network operator material (never distributable source)
 deploy/vpn-output*/
 deploy/vpn/policy*.json
 deploy/vpn/*.key
-relay/data/
-relay/node_modules/
+
+# Local design work and generated module files
+/design/
+/prototype-preview.html
 app/modules/*/android/build/
 app/modules/*/android/.gradle/
 app/modules/*/android/.cxx/
 __pycache__/
 *.pyc
+
+# Internal counsel working document
+/LEGAL-BRIEF.md

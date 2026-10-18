@@ -26,8 +26,8 @@ export function VaultPanel() {
     catch (e) { const message = e instanceof Error ? e.message : ''; setProblem(message && !message.includes('Call to function') ? message : 'Could not save that change. Please try again.'); }
     finally { inAction.current = false; setBusy(false); }
   }
-  const title = { color: colors.ink, fontSize: 34, lineHeight: 43, fontWeight: '700' as const, letterSpacing: -1.1 };
-  const resetConfirmation = <View style={[s.card, { borderColor: colors.error }]}>
+  const title = { color: colors.ink, fontSize: 36, lineHeight: 44, fontWeight: '700' as const, letterSpacing: -1.2 };
+  const resetConfirmation = <View style={[s.card, { borderWidth: 1, borderColor: colors.error }]}>
     <Feather name="trash-2" color={colors.error} size={24} />
     <Text style={s.name}>Delete this account’s data?</Text>
     <Text style={s.body}>This permanently removes your LinkUp profile, chats, friends, settings and old account archives from this phone. It can’t be undone.</Text>
@@ -35,12 +35,12 @@ export function VaultPanel() {
     <ConnectionButton label={busy ? 'Deleting data…' : 'Delete data and continue'} style={{ backgroundColor: colors.error }} onPress={() => perform(vault.startNewIdentity)} disabled={busy} />
     <ConnectionButton label="Keep this account" secondary onPress={() => setNewAccount(false)} disabled={busy} />
   </View>;
-  return <><ScrollView contentContainerStyle={{ padding: 24, paddingTop: vault.status === 'unlocked' ? 8 : 32, paddingBottom: 36, gap: 22, flexGrow: 1 }} keyboardShouldPersistTaps="handled">
+  return <><ScrollView contentContainerStyle={{ padding: 24, paddingTop: vault.status === 'unlocked' ? 16 : 36, paddingBottom: 44, gap: 24, flexGrow: 1 }} keyboardShouldPersistTaps="handled">
     {vault.status !== 'unlocked' && <BrandLogo color={colors.brand} height={32} />}
     {vault.status === 'loading' && <Text style={s.body}>Opening LinkUp…</Text>}
     {vault.status === 'resetting' && <View style={{ flex: 1, justifyContent: 'center', gap: 16 }}><Text style={title}>A fresh start.</Text><Text style={s.body}>Removing the previous account’s data…</Text></View>}
     {vault.status === 'preview' && <>
-      <View style={{ marginTop: 32, gap: 16 }}><Text style={{ ...title, fontSize: 42, lineHeight: 51, letterSpacing: -1.7 }}>Stay close.{`\n`}Talk freely.</Text><Text style={{ ...s.body, color: colors.sub, maxWidth: 280 }}>Private conversations, made simple.</Text></View>
+      <View style={{ marginTop: 36, gap: 16 }}><Text style={{ ...title, fontSize: 44, lineHeight: 52, letterSpacing: -1.7 }}>Stay close.{`\n`}Talk freely.</Text><Text style={{ ...s.body, color: colors.sub, maxWidth: 300 }}>Private conversations, made simple.</Text></View>
       <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ gap: 14, paddingVertical: 24 }}>
         <View style={{ alignSelf: 'flex-start', borderRadius: 19, borderBottomLeftRadius: 5, backgroundColor: colors.soft, padding: 16 }}><Text style={{ ...s.body }}>Coffee later? ☕</Text></View>
         <View style={{ alignSelf: 'flex-end', borderRadius: 19, borderBottomRightRadius: 5, backgroundColor: colors.outgoing, padding: 16 }}><Text style={s.body}>Always. See you there.</Text></View>

@@ -49,7 +49,7 @@ const previousThemePresets: Record<Theme, ThemeColors> = {
     borderColor: '#37433A', outerColor: '#111613', tabColor: '#171D19', errorColor: '#ED7566',
   },
 };
-export const themePresets: Record<Theme, ThemeColors> = {
+const blueThemePresets: Record<Theme, ThemeColors> = {
   Light: {
     textColor: '#182033', accentColor: '#335CFF', backgroundColor: '#FFFFFF',
     secondaryTextColor: '#737D90', onAccentColor: '#FFFFFF', avatarTextColor: '#335CFF',
@@ -59,6 +59,34 @@ export const themePresets: Record<Theme, ThemeColors> = {
   Dark: {
     textColor: '#F1F4FC', accentColor: '#A4B7FF', backgroundColor: '#101522',
     secondaryTextColor: '#939DB2', onAccentColor: '#172350', avatarTextColor: '#BCCAFF',
+    surfaceColor: '#1C2333', secondarySurfaceColor: '#253252', incomingColor: '#202838', outgoingColor: '#2C3B63',
+    borderColor: '#293247', outerColor: '#0B0F19', tabColor: '#101522', errorColor: '#FF8A96',
+  },
+};
+const forestThemePresets: Record<Theme, ThemeColors> = {
+  Light: {
+    textColor: '#252A29', accentColor: '#355D50', backgroundColor: '#FAF9F6',
+    secondaryTextColor: '#62685F', onAccentColor: '#FFFFFF', avatarTextColor: '#355D50',
+    surfaceColor: '#F0F1EB', secondarySurfaceColor: '#E9EDE5', incomingColor: '#ECEEE7', outgoingColor: '#DFE8DA',
+    borderColor: '#E1E4DC', outerColor: '#EDEFE8', tabColor: '#FAF9F6', errorColor: '#AD3E36',
+  },
+  Dark: {
+    textColor: '#F1F2EC', accentColor: '#AFC9AE', backgroundColor: '#17201C',
+    secondaryTextColor: '#ADB8AC', onAccentColor: '#1D3025', avatarTextColor: '#BFD5B5',
+    surfaceColor: '#222D26', secondarySurfaceColor: '#2C392E', incomingColor: '#28352B', outgoingColor: '#354A36',
+    borderColor: '#36443A', outerColor: '#101813', tabColor: '#17201C', errorColor: '#F18F81',
+  },
+};
+export const themePresets: Record<Theme, ThemeColors> = {
+  Light: {
+    textColor: '#182033', accentColor: '#335CFF', backgroundColor: '#FFFFFF',
+    secondaryTextColor: '#606B80', onAccentColor: '#FFFFFF', avatarTextColor: '#335CFF',
+    surfaceColor: '#F3F5FA', secondarySurfaceColor: '#EAF0FF', incomingColor: '#F1F3F8', outgoingColor: '#E7EDFF',
+    borderColor: '#E4E9F2', outerColor: '#EEF2F9', tabColor: '#FFFFFF', errorColor: '#C93443',
+  },
+  Dark: {
+    textColor: '#F1F4FC', accentColor: '#A4B7FF', backgroundColor: '#101522',
+    secondaryTextColor: '#A9B3C8', onAccentColor: '#172350', avatarTextColor: '#BCCAFF',
     surfaceColor: '#1C2333', secondarySurfaceColor: '#253252', incomingColor: '#202838', outgoingColor: '#2C3B63',
     borderColor: '#293247', outerColor: '#0B0F19', tabColor: '#101522', errorColor: '#FF8A96',
   },
@@ -113,9 +141,12 @@ export function migratePreferences(value: unknown): Preferences | null {
   if (validPreferences(value)) {
     const next = copyPreferences(value);
     for (const theme of themeNames) {
-      const previous = previousThemePresets[theme];
-      // Refresh only the untouched old default. Preserve every custom palette.
-      if (Object.keys(next.palettes[theme]).length === Object.keys(previous).length && Object.entries(previous).every(([field, color]) => next.palettes[theme][field as keyof ThemeColors] === color)) next.palettes[theme] = { ...themePresets[theme] };
+      // Refresh only exact untouched defaults from earlier releases.
+      // Even a single changed field or explicit button color remains custom.
+      const untouched = [previousThemePresets[theme], blueThemePresets[theme], forestThemePresets[theme]].some(previous =>
+        Object.keys(next.palettes[theme]).length === Object.keys(previous).length &&
+        Object.entries(previous).every(([field, color]) => next.palettes[theme][field as keyof ThemeColors] === color));
+      if (untouched) next.palettes[theme] = { ...themePresets[theme] };
     }
     return next;
   }
