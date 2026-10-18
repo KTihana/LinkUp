@@ -73,7 +73,7 @@ const built = join(root, 'android/app/build/outputs/apk/release/app-release.apk'
 // sibling index.ts shadowing index.js), silently dropping headless tasks.
 const sourceMap = JSON.parse(await readFile(join(root, 'android/app/build/intermediates/sourcemaps/react/release/index.android.bundle.packager.map'), 'utf8'));
 const entry = JSON.parse(await readFile(join(root, 'package.json'), 'utf8')).main;
-for (const file of [entry, 'src/notifications/register.android.ts', 'src/notifications/backgroundCore.ts',
+for (const file of ['app.json', 'src/stickers/content.ts', 'src/stickers/create.ts', 'src/design/Workspace.tsx', 'src/appearance/AppearancePanel.tsx', entry, 'src/notifications/register.android.ts', 'src/notifications/backgroundCore.ts',
   'src/notifications/native.ts', 'src/notifications/NotificationsPanel.tsx', 'src/messaging/groups.ts',
   'src/messaging/messenger.ts', 'src/messaging/removeFriend.ts', 'src/messaging/MessagingProvider.tsx', 'src/messaging/nearbyTransport.ts', 'src/messaging/nearbySession.ts', 'src/messaging/NearbyPanel.tsx', 'src/security/VaultProvider.tsx', 'src/security/vaultCore.ts',
   'modules/common-nearby/index.ts', 'src/calls/CallsProvider.tsx', 'src/vpn/VpnProvider.tsx', 'src/vpn/VpnPanel.tsx', 'src/vpn/native.ts', 'src/vpn/enrollment.ts', 'src/vpn/account.ts', 'src/messaging/mlsEngine.ts', 'src/messaging/mailboxClient.ts', 'src/messaging/nearbyOffer.ts', 'src/calls/mediaCore.ts', 'src/calls/protocol.ts', 'src/updates/release.ts',
@@ -159,7 +159,7 @@ const sourceDir = await mkdtemp(join(artifacts, 'source-'));
 const sourceName = `tiho-${version}-source.zip`;
 try {
   await run('zip', ['-q', '-r', join(sourceDir, sourceName), 'app', 'relay', 'deploy', 'docs', 'LICENSE', 'README.md',
-    '-x', 'app/AGENTS.md', 'app/node_modules/*', 'relay/node_modules/*', 'app/android/*', 'app/ios/*', 'app/.expo/*', 'app/.signing/*',
+    '-x', 'docs/web/*', 'app/AGENTS.md', 'app/node_modules/*', 'relay/node_modules/*', 'app/android/*', 'app/ios/*', 'app/.expo/*', 'app/.signing/*',
     'app/.native-deps/*', 'app/artifacts/*', 'app/dist/*', 'app/dist-android/*', 'app/.env*', 'relay/.env*', 'relay/data/*',
     'deploy/.private/*', 'deploy/.env', 'deploy/certificates/*', 'deploy/vpn-output*/*', 'deploy/vpn/policy*.json',
     'app/modules/*/android/build/*', 'app/modules/*/android/.gradle/*', 'app/modules/*/android/.cxx/*',

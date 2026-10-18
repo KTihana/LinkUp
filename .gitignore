@@ -21,3 +21,6 @@ __pycache__/
 
 # Internal counsel working document
 /LEGAL-BRIEF.md
+
+# Desktop web is built and published by GitHub Pages.
+/docs/web/

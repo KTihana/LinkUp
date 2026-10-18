@@ -1,3 +1,4 @@
+import { customSticker } from './fixtures/customSticker.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { randomBytes } from 'node:crypto';
@@ -82,12 +83,12 @@ test('two HTTP clients deliver a first message to an offline recipient, resume a
   await restartedBob.connect(fixture.endpoint);
   assert.equal((await histories(restartedBob, fixture.a.publicKey))[0].content, 'Hello while you are offline 🌿');
   assert.equal(decodeMessaging(restartedPort.read()).packages.length, 10);
-  await deliver(restartedBob, fixture.a.publicKey, 'cat-mint', 'sticker');
+  await deliver(restartedBob, fixture.a.publicKey, customSticker, 'sticker');
   await fixture.alice.sync();
   const aliceHistory = await histories(fixture.alice, fixture.b.publicKey);
   assert.equal(aliceHistory[0].status, 'delivered');
   assert.equal(aliceHistory[1].kind, 'sticker');
-  assert.equal(aliceHistory[1].content, 'cat-mint');
+  assert.equal(aliceHistory[1].content, customSticker);
   await restartedBob.sync();
   assert.equal((await histories(restartedBob, fixture.a.publicKey))[1].status, 'delivered');
   assert.equal((await fixture.alice.view()).queued, 0);
@@ -445,7 +446,7 @@ test('reject oversized payloads, invalid saved records and messaging after lock'
   const beforeEscapedMessage = fixture.portA.read();
   await assert.rejects(fixture.alice.send(fixture.b.publicKey, '\0'.repeat(1600)), /8 KiB/);
   assert.equal(fixture.portA.read(), beforeEscapedMessage);
-  await assert.rejects(fixture.alice.send(fixture.b.publicKey, 'https://example.com/sticker.svg', 'sticker'), /built-in/);
+  await assert.rejects(fixture.alice.send(fixture.b.publicKey, 'https://example.com/sticker.svg', 'sticker'), /valid custom sticker/);
   assert.throws(() => decodeMessaging('{"version":1}'));
   assert.throws(() => decodeMessaging(' '.repeat(900001)), /large/);
   fixture.portA.lock();

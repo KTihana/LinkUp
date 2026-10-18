@@ -12,6 +12,7 @@ import type { DeliveryTransport, DeliveryPolicy } from './deliveryTransport.ts';
 import { validateCallSignal, CALL_SIGNAL_TTL, type CallSignal } from '../calls/protocol.ts';
 import type { CallNetwork } from '../calls/controller.ts';
 import { validateNearbyStore, pruneNearbyStore, type NearbyStore } from './nearbyProtocol.ts';
+import { isStickerContent } from '../stickers/content.ts';
 import {
   createPackage, startSession, receiveWelcome, encryptMessage, decryptMessage,
   sessionContext, sessionInitiator, MAX_MESSAGE_BYTES, sessionEpoch, sessionSupportsEpochUpdates,
@@ -63,7 +64,6 @@ const TTL = 7 * 24 * 60 * 60 * 1000;
 const MAX_SAVED_BYTES = 900_000;
 const keyPattern = /^[a-f0-9]{64}$/, idPattern = /^[a-f0-9]{32}$/;
 const textEncoder = new TextEncoder(), textDecoder = new TextDecoder('utf-8', { fatal: true });
-const builtinStickers = new Set(['cat-lavender', 'cat-mint', 'cat-peach', 'cat-rose', 'cat-sky', 'cat-violet']);
 const empty = (): MessagingData => ({ version: 1, endpoint: '', enabled: false, conversations: {}, pending: [], outbox: [], packages: [], seen: [] });
 const identity = (publicKey: string) => `common:${publicKey}`;
 const validKey = (value: unknown): value is string => typeof value === 'string' && keyPattern.test(value);
@@ -81,7 +81,7 @@ function contentValid(kind: unknown, content: unknown): content is string {
   return (kind === 'text' || kind === 'sticker') && typeof content === 'string' && content.length > 0
     && textEncoder.encode(content).length <= MAX_MESSAGE_BYTES
     && textDecoder.decode(textEncoder.encode(content)) === content
-    && (kind !== 'sticker' || builtinStickers.has(content));
+    && (kind !== 'sticker' || isStickerContent(content));
 }
 export function encodeMessaging(data: MessagingData): string {
   const result = JSON.stringify(data);
@@ -560,7 +560,7 @@ export class Messenger {
       const id = requestId ?? await this.id(), createdAt = this.now(); this.current(token);
       const payload: ChatPayload = { version: 1, type: 'chat', id, kind, content, createdAt };
       if (!contentValid(kind, content) || textEncoder.encode(JSON.stringify(payload)).length > MAX_MESSAGE_BYTES) {
-        throw new Error('Messages are limited to 8 KiB including metadata. Use a built-in sticker for sticker messages.');
+        throw new Error('Messages are limited to 8 KiB including metadata. Choose a valid custom sticker for sticker messages.');
       }
       await this.transaction(token, async (data, signer, contacts) => {
         prune(data, this.now()); requireContact(peer, contacts);

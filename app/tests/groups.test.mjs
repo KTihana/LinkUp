@@ -1,3 +1,4 @@
+import { customSticker } from './fixtures/customSticker.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { randomBytes } from 'node:crypto';
@@ -48,12 +49,12 @@ test('three clients invite, explicitly join, exchange encrypted group text/stick
   await alice.sendGroup(id, 'waiting for you to join'); await f.rounds();
   assert.equal((await bob.view()).groups[id].messages.length, 0, 'pending group contents are hidden until Join');
   await bob.answerGroup(id, true); await cora.answerGroup(id, true); await f.rounds();
-  await Promise.all([alice.sendGroup(id, 'bring cake'), bob.sendGroup(id, 'cat-mint', 'sticker'), cora.sendGroup(id, 'I will bring tea')]);
+  await Promise.all([alice.sendGroup(id, 'bring cake'), bob.sendGroup(id, customSticker, 'sticker'), cora.sendGroup(id, 'I will bring tea')]);
   await f.rounds(3);
   for (const client of [alice,bob,cora]) {
     const view = await client.view(), messages = view.groups[id].messages;
     assert.equal(messages.length, 4);
-    assert.deepEqual(new Set(messages.map(m => m.content)), new Set(['bring cake','cat-mint','I will bring tea','waiting for you to join']));
+    assert.deepEqual(new Set(messages.map(m => m.content)), new Set(['bring cake',customSticker,'I will bring tea','waiting for you to join']));
     assert.equal(Object.values(view.conversations).flatMap(c => c.messages).length, 0, 'group packets stay out of private-chat history');
     assert.ok(messages.filter(m => m.mine).every(m => m.status === 'delivered'));
   }

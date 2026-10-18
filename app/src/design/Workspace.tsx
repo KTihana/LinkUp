@@ -23,23 +23,22 @@ export function WorkspaceRail({ selected, compact, name, preview, onNavigate }: 
   const s = styles(c);
   return <ScrollView style={[s.rail, compact && s.compactRail]} contentContainerStyle={{ flexGrow: 1, paddingBottom: 20 }} showsVerticalScrollIndicator={false}>
     <View style={s.brand}><BrandLogo color={c.brand} height={compact ? 29 : 31} markOnly={compact} /></View>
-    {!compact && <Text style={s.railIntro}>A space for your people.</Text>}
     <View style={s.navigation}>
       {destinations.map(item => {
         const section = ['Chats', 'Conversation', 'New group', 'Group info'].includes(selected) ? 'Chats' : ['Friends', 'Invite a friend', 'Add friend'].includes(selected) ? 'Friends' : selected === 'Calls' ? 'Calls' : 'You';
         const active = section === item.name;
         return <MotionPressable key={item.name} accessibilityRole="button" accessibilityLabel={item.name} accessibilityState={{ selected: active }} onPress={() => onNavigate(item.name)} style={[s.navItem, active && s.navActive, compact && s.navCompact]}>
           <Feather name={item.icon} size={21} color={active ? c.brand : c.sub} />
-          {!compact && <Text style={[s.navLabel, active && { color: c.brand, fontWeight: '600' }]}>{item.name === 'You' ? 'Your space' : item.name}</Text>}
+          {!compact && <Text style={[s.navLabel, active && { color: c.brand, fontWeight: '600' }]}>{item.name === 'You' ? 'Profile' : item.name}</Text>}
           {active && !compact && <View style={s.activeDot} />}
         </MotionPressable>;
       })}
     </View>
     <View style={{ flex: 1 }} />
-    {!compact && <View style={s.inviteNote}><View style={s.inviteIcon}><Feather name="user-plus" size={22} color={c.brand} /></View><Text style={s.inviteTitle}>Good company starts here.</Text><Text style={s.inviteDescription}>Bring someone into your circle.</Text><MotionPressable accessibilityRole="button" onPress={() => onNavigate('Invite a friend')} style={s.inviteButton}><Text style={s.inviteButtonText}>Invite a friend</Text><Feather name="arrow-up-right" color={c.brand} size={17} /></MotionPressable></View>}
-    <MotionPressable accessibilityRole="button" accessibilityLabel={preview ? 'Set up your profile' : 'Your profile'} onPress={() => onNavigate(preview ? 'Local vault' : 'You')} style={[s.account, compact && { justifyContent: 'center' }]}>
+    {!compact && <View style={s.inviteNote}><View style={s.inviteIcon}><Feather name="user-plus" size={22} color={c.brand} /></View><MotionPressable accessibilityRole="button" onPress={() => onNavigate('Invite a friend')} style={s.inviteButton}><Text style={s.inviteButtonText}>Invite a friend</Text><Feather name="arrow-up-right" color={c.brand} size={17} /></MotionPressable></View>}
+    <MotionPressable accessibilityRole="button" accessibilityLabel={preview ? 'Create an account' : 'Your profile'} onPress={() => onNavigate(preview ? 'Local vault' : 'You')} style={[s.account, compact && { justifyContent: 'center' }]}>
       <View style={s.accountAvatar}><Text style={s.accountInitial}>{name.trim()[0]?.toUpperCase() || 'Y'}</Text></View>
-      {!compact && <View style={{ flex: 1, gap: 4 }}><Text style={s.accountName} numberOfLines={1}>{preview ? 'Make yourself at home' : name}</Text><Text style={s.accountCaption}>{preview ? 'Set up your profile' : 'Your personal space'}</Text></View>}
+      {!compact && <View style={{ flex: 1, gap: 4 }}><Text style={s.accountName} numberOfLines={1}>{preview ? 'Set up LinkUp' : name}</Text><Text style={s.accountCaption}>{preview ? 'Create an account' : 'Account settings'}</Text></View>}
       {!compact && <Feather name="chevron-right" size={16} color={c.sub} />}
     </MotionPressable>
   </ScrollView>;
@@ -64,15 +63,14 @@ export function ConversationWelcome({ preview, onCompose, onInvite }: { preview:
   const { colors: c } = useAppearance();
   const s = styles(c);
   return <ScrollView style={s.welcome} contentContainerStyle={{ flexGrow: 1 }}>
-    <View style={s.welcomeTop}><View style={s.quietLabel}><Feather name={preview ? 'eye' : 'lock'} size={14} color={c.sub} /><Text style={s.caption}>{preview ? 'A look inside LinkUp' : 'Your conversations, your space'}</Text></View><MotionPressable accessibilityRole="button" accessibilityLabel="Invite a friend" onPress={onInvite} style={s.topAction}><Feather name="user-plus" size={19} color={c.brand} /></MotionPressable></View>
+    <View style={s.welcomeTop}><View style={s.quietLabel}><Feather name={preview ? 'eye' : 'lock'} size={14} color={c.sub} /><Text style={s.caption}>{preview ? 'Sample conversations' : 'End-to-end encrypted'}</Text></View><MotionPressable accessibilityRole="button" accessibilityLabel="Invite a friend" onPress={onInvite} style={s.topAction}><Feather name="user-plus" size={19} color={c.brand} /></MotionPressable></View>
     <Entrance style={s.welcomeBody} distance={12} duration={450}>
       <ConnectionArtwork size={282} />
-      <Text accessibilityRole="header" style={s.welcomeTitle}>A little closer.{ '\n' }Even from here.</Text>
-      <Text style={s.welcomeDescription}>The everyday hellos. The big little moments.{ '\n' }A quieter space to share them with your people.</Text>
+      <Text accessibilityRole="header" style={s.welcomeTitle}>Private conversations{ '\n' }with friends.</Text>
       <MotionPressable accessibilityRole="button" onPress={onCompose} style={s.startButton}><Feather name="edit-3" color={c.onButton} size={18} /><Text style={s.startButtonText}>Start a conversation</Text></MotionPressable>
-      {preview && <Text style={s.previewNote}>Explore a sample chat, or set up your own space.</Text>}
+      {preview && <Text style={s.previewNote}>Open a sample chat or create an account.</Text>}
     </Entrance>
-    <View style={s.welcomeFoot}><Feather name="shield" size={15} color={c.sub} /><Text style={s.caption}>{preview ? 'Sample conversations. Real possibilities.' : 'Built for connection. Designed for privacy.'}</Text></View>
+    <View style={s.welcomeFoot}><Feather name="shield" size={15} color={c.sub} /><Text style={s.caption}>{preview ? 'Peer-to-peer messaging' : 'Messages are end-to-end encrypted'}</Text></View>
   </ScrollView>;
 }
 

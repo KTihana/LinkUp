@@ -3,6 +3,7 @@ import { ed25519 } from '@noble/curves/ed25519.js';
 import { bytesToHex, hexToBytes } from '@noble/hashes/utils.js';
 import { sha256 } from '@noble/hashes/sha2.js';
 import type { MailSigner } from './mailboxClient.ts';
+import { isStickerContent } from '../stickers/content.ts';
 
 export type GroupMember = { publicKey: string; name: string };
 export type GroupDescriptor = { version: 1; id: string; name: string; owner: string; members: GroupMember[]; createdAt: number; signature: string };
@@ -52,7 +53,7 @@ export function readGroupPacket(text: string): GroupPacket {
   exact(value, ['group', 'event', 'kind', 'text']);
   validateGroup(value.group);
   if (JSON.stringify(value) !== text || !['invite', 'accept', 'leave', 'message'].includes(value.event as string) || !['text', 'sticker'].includes(value.kind as string) || typeof value.text !== 'string' || (value.event !== 'message' && (value.text !== '' || value.kind !== 'text')) || (value.event === 'message' && (!value.text.length || encoder.encode(value.text).length > 4000))) throw new Error('Invalid group message.');
-  if (value.kind === 'sticker' && !/^cat-(lavender|mint|peach|rose|sky|violet)$/.test(value.text)) throw new Error('Unknown sticker.');
+  if (value.kind === 'sticker' && !isStickerContent(value.text)) throw new Error('Invalid custom sticker.');
   return value as unknown as GroupPacket;
 }
 export function validateGroups(groups: unknown): asserts groups is Record<string, GroupRecord> {

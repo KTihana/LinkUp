@@ -1,13 +1,26 @@
 <p align="center">
   <img src="docs/linkup-logo.svg" width="280" alt="LinkUp">
 </p>
-<p align="center">Chat, call, and connect with friends.</p>
+<p align="center">Private conversations with friends.</p>
 <p align="center">
   <a href="https://github.com/KTihana/LinkUp/releases/latest"><img src="docs/download-android.svg" width="244" height="56" alt="Download LinkUp for Android — latest stable release"></a>
   &nbsp;
-  <a href="https://github.com/KTihana/LinkUp/releases"><img src="docs/view-release.svg" width="180" height="56" alt="View all LinkUp releases"></a>
+  <a href="https://ktihana.github.io/LinkUp/web/"><img src="docs/open-web.svg" width="210" height="56" alt="Open LinkUp desktop web"></a>
 </p>
 <p align="center"><strong>Android 7+ · ARM64</strong><br>Install updates over your existing app to keep your chats.</p>
+
+## About LinkUp
+
+LinkUp is a peer-to-peer (P2P) messenger for private conversations with friends.
+
+- End-to-end encrypted direct and group messages.
+- Voice and video calls.
+- Nearby messaging over local Wi-Fi, hotspot and Bluetooth on Android.
+- Optional internet delivery through a self-hosted mailbox, with queued messages.
+- Emoji, custom stickers made from your photos, and friend invitations by QR code or link.
+- Encrypted local storage, app lock, and customizable light and dark themes.
+
+Nearby features are Android-only. Internet messaging needs a configured mailbox; calls require both people to be online.
 
 ## A look at LinkUp
 

@@ -63,8 +63,8 @@ export function AppearancePanel({ onClose }: { onClose: () => void }) {
   return <>
     <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 24, paddingTop: 12, paddingBottom: 28, gap: 26 }}>
       <View style={{ gap: 10 }}>
-        <Text style={{ color: colors.ink, fontSize: 34, lineHeight: 39, letterSpacing: -1.2, fontWeight: '600' }}>Make it feel like you.</Text>
-        <Text style={{ ...text, color: colors.sub }}>A little light. A little color. Your own quiet corner.</Text>
+        <Text style={{ color: colors.ink, fontSize: 34, lineHeight: 39, letterSpacing: -1.2, fontWeight: '600' }}>Appearance settings</Text>
+        <Text style={{ ...text, color: colors.sub }}>Choose your theme and colors.</Text>
       </View>
       <View accessibilityLabel="Theme mode" style={{ flexDirection: 'row', gap: 10 }}>
         {modeNames.map(mode => {
@@ -79,7 +79,7 @@ export function AppearancePanel({ onClose }: { onClose: () => void }) {
       </View>
       <View style={{ gap: 12 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-          <Text style={{ ...text, fontWeight: '600' }}>A look inside</Text>
+          <Text style={{ ...text, fontWeight: '600' }}>Preview</Text>
           {draft.theme === 'Automatic' && <View style={{ flexDirection: 'row', gap: 3, backgroundColor: colors.soft, borderRadius: controlRadius.button, padding: 3 }}>
             {themeNames.map(theme => <Pressable key={theme} accessibilityRole="button" accessibilityLabel={`Edit ${theme} colors`} accessibilityState={{ selected: editing === theme }} disabled={saving} onPress={() => setEditing(theme)}
               style={{ minHeight: 38, paddingHorizontal: 14, borderRadius: controlRadius.button, backgroundColor: editing === theme ? colors.paper : 'transparent', justifyContent: 'center' }}>
@@ -94,11 +94,10 @@ export function AppearancePanel({ onClose }: { onClose: () => void }) {
           </View>
           <View style={{ alignSelf: 'flex-start', paddingVertical: 12, paddingHorizontal: 16, borderRadius: 20, borderBottomLeftRadius: 6, backgroundColor: preview.incoming }}><Text style={{ color: preview.ink, fontSize: 15, lineHeight: 23 }}>Coffee at four?</Text></View>
           <View style={{ alignSelf: 'flex-end', paddingVertical: 12, paddingHorizontal: 16, borderRadius: 20, borderBottomRightRadius: 6, backgroundColor: preview.outgoing }}><Text style={{ color: preview.ink, fontSize: 15, lineHeight: 23 }}>Sounds like a plan.</Text></View>
-          <View accessibilityLabel="Button color preview" style={{ alignSelf: 'flex-end', flexDirection: 'row', gap: 8, alignItems: 'center', paddingVertical: 10, paddingHorizontal: 18, borderRadius: controlRadius.button, backgroundColor: preview.button }}><Text style={{ color: preview.onButton, fontSize: 14, fontWeight: '600' }}>Send</Text><Feather name="arrow-up" size={16} color={preview.onButton} /></View>
         </View>
       </View>
       <View style={{ gap: 12 }}>
-        <View style={{ gap: 3 }}><Text style={{ ...text, fontWeight: '600' }}>{editing} palette</Text><Text style={small}>Choose a color to make it your own.</Text></View>
+        <View style={{ gap: 3 }}><Text style={{ ...text, fontWeight: '600' }}>{editing} palette</Text><Text style={small}>Select a color to edit.</Text></View>
         <View style={{ borderRadius: 22, backgroundColor: colors.soft, overflow: 'hidden' }}>{mainColors.map(colorRow)}</View>
         <Pressable accessibilityRole="button" accessibilityState={{ expanded: showAdvanced }} onPress={() => setShowAdvanced(v => !v)} style={{ flexDirection: 'row', gap: 8, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}>
           <Text style={{ color: colors.ink, fontSize: 14, fontWeight: '500' }}>More colors</Text><Feather name={showAdvanced ? 'chevron-up' : 'chevron-down'} size={16} color={colors.sub} />

@@ -39,7 +39,7 @@ if (!process.argv.includes('--init')) {
   const apk = await readFile(resolve(root, 'artifacts', file));
   const payload = JSON.stringify({ schema: 1, packageName: config.android.package, version: config.version,
     versionCode: config.android.versionCode, minSdk: 24, abi: 'arm64-v8a', file, sha256: createHash('sha256').update(apk).digest('hex'),
-    bytes: apk.length, publishedAt: new Date().toISOString(), notes: 'A refreshed blue LinkUp app with clearer chats and navigation, larger controls, and polished dark mode.' });
+    bytes: apk.length, publishedAt: new Date().toISOString(), notes: 'Removes default stickers and the sample Send button. Adds custom photo stickers, a hosted desktop web app, and clearer P2P descriptions. Custom stickers require LinkUp 0.3.4 on both devices.' });
   const signature = bytesToHex(ed25519.sign(utf8ToBytes('Tiho Android release v1\n' + payload), key));
   await writeFile(resolve(root, 'artifacts/tiho-update-v1.json'), JSON.stringify({ payload, signature }) + '\n');
   console.log(`Prepared signed release v${config.version}. Publish APK, signed manifest, checksum and corresponding source together.`);

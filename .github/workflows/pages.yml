@@ -1,0 +1,48 @@
+name: Deploy desktop web
+
+on:
+  push:
+    branches: [main]
+    paths: ['app/**', 'docs/**', '.github/workflows/pages.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - run: npm ci
+        working-directory: app
+      - name: Export desktop web
+        run: npm run build:web -- --output-dir ../docs/web --max-workers 2
+        working-directory: app
+        env:
+          LINKUP_WEB_BASE_URL: /LinkUp/web
+      - uses: actions/upload-pages-artifact@v5.0.0
+        with:
+          path: docs
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publish web app and invitation page
+        id: deployment
+        uses: actions/deploy-pages@v5.0.1

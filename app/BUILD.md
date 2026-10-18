@@ -39,3 +39,16 @@ Create an account, then exchange invitations from **Friends**. Both people must 
 To share a local APK, run `npm run serve:apk`. For another phone on your Wi-Fi, set `COMMON_DOWNLOAD_HOST` to this computer's private IPv4 address. The server uses port 8084; stop it with Ctrl+C.
 
 For a self-hosted mailbox and calling relay, use [server setup](../deploy/README.md). [Notification setup](NOTIFICATIONS.md) describes the optional UnifiedPush configuration.
+
+## Desktop web
+
+Open [LinkUp in your browser](https://ktihana.github.io/LinkUp/web/).
+The desktop web app is exported by `.github/workflows/pages.yml` when app or site files change on `main`. GitHub Pages serves it under `/LinkUp/web/` and keeps the invitation page at `/LinkUp/`.
+
+For a matching local export, run from `app/`:
+
+```sh
+LINKUP_WEB_BASE_URL=/LinkUp/web npm run build:web -- --output-dir ../docs/web
+```
+
+The base path applies only to this web build. Nearby Wi-Fi, hotspot and Bluetooth connections require the Android app. Internet messaging uses your configured mailbox.
