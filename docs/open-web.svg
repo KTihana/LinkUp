@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="210" height="56" viewBox="0 0 210 56" fill="none" role="img" aria-labelledby="title">
-  <title id="title">Open desktop web</title>
+  <title id="title">Open web demo</title>
   <rect x=".5" y=".5" width="209" height="55" rx="27.5" fill="#F3F5FA" stroke="#E4E9F2"/>
-  <text x="24" y="33.5" fill="#182033" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif" font-size="15" font-weight="600">Open desktop web</text>
+  <text x="24" y="33.5" fill="#182033" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif" font-size="15" font-weight="600">Open web demo</text>
   <path d="M177 23l5 5-5 5m-6-5h11" stroke="#335CFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

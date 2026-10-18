@@ -5,7 +5,7 @@
 <p align="center">
   <a href="https://github.com/KTihana/LinkUp/releases/latest"><img src="docs/download-android.svg" width="244" height="56" alt="Download LinkUp for Android — latest stable release"></a>
   &nbsp;
-  <a href="https://ktihana.github.io/LinkUp/web/"><img src="docs/open-web.svg" width="210" height="56" alt="Open LinkUp desktop web"></a>
+  <a href="https://ktihana.github.io/LinkUp/web/"><img src="docs/open-web.svg" width="210" height="56" alt="Open LinkUp web demo"></a>
 </p>
 <p align="center"><strong>Android 7+ · ARM64</strong><br>Install updates over your existing app to keep your chats.</p>
 
