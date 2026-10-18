@@ -8,7 +8,7 @@ LinkUp is a private messenger for conversations with people you know. Blue is it
 - Desktop web uses an adaptive navigation rail, conversation list and reading pane. Short windows keep actions reachable through scrolling.
 - System type, consistent alignment and a restrained hierarchy keep names, messages and supporting information readable.
 - Shared controls provide brief spring and pressed feedback. Reduced-motion preferences remove movement while keeping visual feedback. Browser controls have visible keyboard focus.
-- Search matches conversation names and text history. Preview conversations are clearly marked as samples. The welcome text is “Private conversations with friends.” Supporting copy is functional and concise. The unread filter is shown only in the sample preview until persistent read tracking is available for real accounts.
+- Search matches conversation names and text history. Preview conversations are clearly marked as samples. The welcome text is “Conversations that stay between those who are a part of it”, with no supporting text under the start button. The unread filter is shown only in the sample preview until persistent read tracking is available for real accounts.
 - Appearance settings support light, dark and scheduled automatic modes, with customizable semantic colors. Exact untouched earlier defaults migrate to the blue palette; custom palettes remain intact.
 
 Updated surfaces include conversations, profile, appearance, friends and invitations, groups, app lock, calls, connection setup, notifications and updates. The invitation and download pages use the same blue visual identity. The README links to Android downloads and the hosted desktop web app.
