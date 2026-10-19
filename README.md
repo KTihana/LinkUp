@@ -16,11 +16,12 @@ LinkUp is a peer-to-peer (P2P) messenger for private conversations with friends.
 - End-to-end encrypted direct and group messages.
 - Voice and video calls.
 - Nearby messaging over local Wi-Fi, hotspot and Bluetooth on Android.
-- Optional internet delivery through a self-hosted mailbox, with queued messages.
+- Automatic internet P2P on Android, using Tox discovery and encrypted relay fallback.
+- Messages queue locally until both friends are online; a custom mailbox is optional.
 - Emoji, custom stickers made from your photos, and friend invitations by QR code or link.
 - Encrypted local storage, app lock, and customizable light and dark themes.
 
-Nearby features are Android-only. Internet messaging needs a configured mailbox; calls require both people to be online.
+Android internet P2P needs no server setup: add each other as friends and keep both apps open. Nearby features are Android-only. The web client still needs a mailbox. Internet calls currently need the calling relay and both people online.
 
 ## A look at LinkUp
 

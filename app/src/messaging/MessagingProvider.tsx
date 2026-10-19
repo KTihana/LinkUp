@@ -1,3 +1,6 @@
+import { mailboxURL } from './mailboxClient';
+import { InternetSession, type InternetState } from './internet/session';
+import { internetNative } from './internet/native';
 // SPDX-License-Identifier: GPL-3.0-only
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { AppState } from 'react-native';
@@ -18,7 +21,7 @@ import type { CallSignal } from '../calls/protocol';
 import type { CallNetwork } from '../calls/controller';
 
 const emptyView: MessagingView = { endpoint: '', enabled: false, policy: 'automatic', conversations: {}, queued: 0 };
-type Value = { removeFriend: (peer: string) => Promise<string>; view: MessagingView; preferencesReady: boolean; busy: boolean; problem: string; connect: (url: string) => Promise<void>; disconnect: () => Promise<void>; sync: () => Promise<void>; reconnect: (peer: string) => Promise<void>; send: (peer: string, text: string, kind?: 'text' | 'sticker') => Promise<void>;
+type Value = { internet: InternetState; internetSupported: boolean; resumeInternet: () => Promise<void>; removeFriend: (peer: string) => Promise<string>; view: MessagingView; preferencesReady: boolean; busy: boolean; problem: string; connect: (url: string) => Promise<void>; disconnect: () => Promise<void>; sync: () => Promise<void>; reconnect: (peer: string) => Promise<void>; send: (peer: string, text: string, kind?: 'text' | 'sticker') => Promise<void>;
   notificationRequest: (action: 'push-config' | 'push-register' | 'push-unregister', payload: unknown) => Promise<Record<string, unknown>>;
   createGroup: (name: string, peers: string[]) => Promise<string>; answerGroup: (id: string, join: boolean) => Promise<void>; sendGroup: (id: string, text: string, kind?: 'text' | 'sticker') => Promise<void>;
   sendCall: (peer: string, signal: CallSignal) => Promise<void>; subscribeCalls: (listener: (peer: string, signal: CallSignal) => void) => () => void; callNetwork: (refresh?: boolean) => Promise<CallNetwork>;
@@ -57,6 +60,30 @@ export function MessagingProvider({ children }: { children: React.ReactNode }) {
     randomBytes: getRandomBytesAsync, ensureCrypto: ensureMessagingCrypto, sync: () => {}, isForeground: () => AppState.currentState === 'active' }));
   useEffect(() => { nearbySession.setSyncListener(() => { void sync(); }); return () => nearbySession.setSyncListener(() => {}); }, [nearbySession, sync]);
   const nearby = useSyncExternalStore(nearbySession.subscribe, nearbySession.getSnapshot, nearbySession.getSnapshot);
+  const [internetSession] = useState(() => new InternetSession({ native: internetNative, port: { transact: vault.transactMessaging }, messenger,
+    randomBytes: getRandomBytesAsync, isForeground: () => AppState.currentState === 'active' || AppState.currentState === null }));
+  const internet = useSyncExternalStore(internetSession.subscribe, internetSession.getSnapshot, internetSession.getSnapshot);
+  const [internetRestart, setInternetRestart] = useState(0);
+  const [foreground, setForeground] = useState(AppState.currentState !== 'background');
+  useEffect(() => { internetSession.setSyncListener(() => { void sync(); }); return () => internetSession.setSyncListener(() => {}); }, [internetSession, sync]);
+  useEffect(() => {
+    const listener = AppState.addEventListener('change', state => { setForeground(state === 'active'); if (state !== 'active') void internetSession.stop(); });
+    return () => { listener.remove(); void internetSession.stop(); };
+  }, [internetSession]);
+  useEffect(() => watchSessionVisibility(() => { void internetSession.stop(); }), [internetSession]);
+  useEffect(() => {
+    if (internetNative && vault.status === 'unlocked') void messenger.initializeInternet().catch(() => {});
+  }, [messenger, vault.status, vault.generation]);
+  const friendKeys = vault.contacts.map(contact => contact.publicKey).sort().join(',');
+  const withInternetIdentity = vault.withInternetIdentity;
+  useEffect(() => {
+    if (!internetNative || !foreground || vault.status !== 'unlocked' || policyGeneration !== vault.generation || !view.enabled || view.policy === 'nearby-only' || view.endpoint || nearby.phase !== 'idle' || vpn.status.connected || vpn.status.connecting) {
+      void internetSession.stop(); return;
+    }
+    void internetSession.start(withInternetIdentity, friendKeys ? friendKeys.split(',').map(publicKey => ({ publicKey })) : []);
+    return () => { void internetSession.stop(); };
+  }, [internetSession, internetRestart, foreground, vault.status, vault.generation, policyGeneration, view.enabled, view.policy, view.endpoint, nearby.phase, vpn.status.connected, vpn.status.connecting, friendKeys, withInternetIdentity]);
+
   useEffect(() => {
     if (nearby.kind === 'vpn' && !vpn.status.connected) { messenger.suspend(); void nearbySession.stop().catch(() => {}); }
   }, [nearby.kind, vpn.status.connected, messenger, nearbySession]);
@@ -123,16 +150,16 @@ export function MessagingProvider({ children }: { children: React.ReactNode }) {
     if (vault.status === 'unlocked' && policyGeneration === vault.generation) notificationsNative?.deliveryAllowed(!removingFriend.current && view.enabled && view.policy === 'automatic' && !!view.endpoint);
   }, [vault.status, vault.generation, policyGeneration, view.enabled, view.policy, view.endpoint]);
   async function restoreBackgroundRoute() { try { const latest = await messenger.view(); notificationsNative?.deliveryAllowed(!removingFriend.current && latest.enabled && latest.policy === 'automatic' && !!latest.endpoint); } catch { /* Locked state keeps the last explicit revocation. */ } }
-  async function connect(url: string) { await requireRoute('internet'); notificationsNative?.deliveryAllowed(false); const current = generation.current; try { await messenger.setPolicy('automatic'); await messenger.connect(url); if (current === generation.current) setProblem(''); } catch (e) { if (current === generation.current) setProblem(e instanceof Error ? e.message : 'Could not connect your mailbox.'); throw e; } finally { await restoreBackgroundRoute(); } }
-  async function disconnect() { requireAvailable(); notificationsNative?.deliveryAllowed(false); await nearbySession.stop(); await messenger.disconnect(); setProblem(''); }
+  async function connect(url: string) { const address = mailboxURL(url); await requireRoute('internet'); notificationsNative?.deliveryAllowed(false); const current = generation.current; try { await internetSession.stop(); await messenger.connect(address); if (current === generation.current) setProblem(''); } catch (e) { if (current === generation.current) setProblem(e instanceof Error ? e.message : 'Could not connect your mailbox.'); throw e; } finally { await restoreBackgroundRoute(); setInternetRestart(value => value + 1); } }
+  async function disconnect() { requireAvailable(); notificationsNative?.deliveryAllowed(false); await internetSession.stop(); await nearbySession.stop(); await messenger.disconnect(); setProblem(''); }
   async function send(peer: string, text: string, kind: 'text' | 'sticker' = 'text') { requireAvailable(); await messenger.send(peer, text, kind); if (view.enabled) void sync(); }
   async function reconnect(peer: string) { requireAvailable(); await messenger.reconnect(peer); void sync(); }
-  async function setPolicy(policy: DeliveryPolicy) { requireAvailable(); if (policy === 'automatic') await requireRoute('internet'); notificationsNative?.deliveryAllowed(false); try { await messenger.setPolicy(policy); setProblem(''); if (policy === 'automatic' && view.enabled) void sync(); } finally { await restoreBackgroundRoute(); } }
+  async function setPolicy(policy: DeliveryPolicy) { requireAvailable(); if (policy === 'automatic') await requireRoute('internet'); notificationsNative?.deliveryAllowed(false); try { if (policy === 'nearby-only') await internetSession.stop(); await messenger.setPolicy(policy); setProblem(''); if (policy === 'automatic' && view.enabled) void sync(); } finally { await restoreBackgroundRoute(); } }
   async function removeFriend(peer: string): Promise<string> {
     requireAvailable(); removingFriend.current = true; generation.current += 1; setBusy(true);
     notificationsNative?.deliveryAllowed(false); messenger.suspend();
     try {
-    await nearbySession.stop(); await vpn.stop();
+    await internetSession.stop(); await nearbySession.stop(); await vpn.stop();
     await vault.removeContact(peer);
     let result = 'Friend removed from this phone. Mailbox revocation will apply when internet delivery reconnects.';
     const latest = await messenger.view();
@@ -152,7 +179,7 @@ export function MessagingProvider({ children }: { children: React.ReactNode }) {
       if (!status?.connected || status.identity !== vault.identity?.replace(/^common:/, '') || !status.config || status.config.expiresAt <= Date.now()) throw new Error('Connect your enrolled private network first.');
     } else if (status?.connected || status?.connecting) throw new Error('Stop your private network before choosing a different route.');
   }
-  return <Context.Provider value={{ view: vault.status === 'unlocked' ? view : emptyView, preferencesReady: vault.status === 'unlocked' && policyGeneration === vault.generation, busy, problem, connect, disconnect, sync, reconnect, send, removeFriend,
+  return <Context.Provider value={{ internet, internetSupported: !!internetNative, resumeInternet: async () => { await requireRoute('internet'); await messenger.resumeInternet(); setInternetRestart(value => value + 1); }, view: vault.status === 'unlocked' ? view : emptyView, preferencesReady: vault.status === 'unlocked' && policyGeneration === vault.generation, busy, problem, connect, disconnect, sync, reconnect, send, removeFriend,
     notificationRequest: async (action, payload) => { requireAvailable(); return messenger.notificationRequest(action, payload); },
     createGroup: async (name, peers) => { requireAvailable(); const id = await messenger.createGroup(name, peers, vault.profile.name); if (view.enabled) void sync(); return id; },
     answerGroup: async (id, join) => { requireAvailable(); await messenger.answerGroup(id, join); if (!join) void notificationsNative?.clear(`group:${id}`).catch(() => {}); if (view.enabled) void sync(); },
@@ -164,7 +191,7 @@ export function MessagingProvider({ children }: { children: React.ReactNode }) {
       if (nearby.kind === 'bluetooth') throw new Error('Bluetooth supports messages. Connect over Wi-Fi or the internet for calls.');
       return messenger.callNetwork(refresh);
     },
-    nearby, capabilities, setPolicy, hostNearby: async (peer, kind) => { notificationsNative?.deliveryAllowed(false); await requireRoute(kind); await nearbySession.host(peer, kind); }, joinNearby: async input => { notificationsNative?.deliveryAllowed(false); await requireRoute(inspectNearbyOffer(input, Date.now()).kind); await nearbySession.join(input); },
+    nearby, capabilities, setPolicy, hostNearby: async (peer, kind) => { notificationsNative?.deliveryAllowed(false); await requireRoute(kind); await internetSession.stop(); await nearbySession.host(peer, kind); }, joinNearby: async input => { notificationsNative?.deliveryAllowed(false); await requireRoute(inspectNearbyOffer(input, Date.now()).kind); await internetSession.stop(); await nearbySession.join(input); },
     connectBluetooth: async id => { requireAvailable(); await nearbySession.connectBluetooth(id); }, stopNearby: nearbySession.stop,
   }}>{children}</Context.Provider>;
 }

@@ -32,9 +32,10 @@ function iconSvg(scale, fill = brandBlue, background = '') {
 async function png(svg, filename, size = 1024) {
   await sharp(Buffer.from(svg)).resize(size, size).png().toFile(resolve(assets, filename));
 }
-// Android uses a transparent backdrop and a larger mark within its safe area.
-await png(iconSvg(1.12, brandBlue, paper), 'icon.png');
-await png(iconSvg(1.32), 'android-icon.png');
+// Android uses the standalone transparent mark, without an adaptive/round badge.
+// Keep the general iOS icon opaque; the OS supplies its home-screen shape.
+await png(iconSvg(1.4, brandBlue, paper), 'icon.png');
+await png(iconSvg(1.48), 'android-icon.png');
 await png(iconSvg(.86), 'android-icon-foreground.png');
 await png(iconSvg(.86, '#000000'), 'android-icon-monochrome.png');
 await sharp({ create: { width: 1024, height: 1024, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } }).png().toFile(resolve(assets, 'android-icon-background.png'));

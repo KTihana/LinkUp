@@ -7,7 +7,7 @@ import trust from './releaseTrust.json';
 import { useMessaging } from '../messaging/MessagingProvider';
 import { assetUrl, latestRelease, migrateReleaseRepository, validRepository, type Release } from './release';
 
-type Installed = { version: string; versionCode: number; packageName: string };
+type Installed = { version: string; versionCode: number; packageName: string; updateReady?: boolean };
 type NativeUpdates = { installed(): Promise<Installed>; download(url: string, hash: string, bytes: number, code: number): Promise<boolean>; install(): Promise<'permission' | 'installer'>; cancel(): Promise<void> };
 const native = () => requireNativeModule<NativeUpdates>('TihoUpdates');
 type Settings = { repository: string; automatic: boolean };
@@ -24,12 +24,15 @@ export function UpdatesProvider({ children }: { children: React.ReactNode }) {
   const [release, setRelease] = useState<Release | null>(null), [status, setStatus] = useState<Status>('idle'), [error, setError] = useState(''), [ready, setReady] = useState(Platform.OS !== 'android');
   const request = useRef<AbortController | null>(null), lastCheck = useRef(0), busy = useRef(false);
   const generation = useRef(0);
+  const pendingInstall = useRef(false);
   useEffect(() => {
     if (Platform.OS !== 'android') return;
     let alive = true;
     void Promise.all([native().installed(), SecureStore.getItemAsync(storage)]).then(([info, raw]) => {
       if (!alive) return;
       setInstalled(info);
+      pendingInstall.current = info.updateReady === true;
+      if (pendingInstall.current) setStatus('ready');
       console.info('LinkUp: native update service ready.');
       if (raw) { const s = JSON.parse(raw); if (typeof s.repository === 'string' && (s.repository === '' || validRepository(s.repository)) && typeof s.automatic === 'boolean') setSettings({ ...s, repository: migrateReleaseRepository(s.repository) }); }
       setReady(true);
@@ -37,7 +40,7 @@ export function UpdatesProvider({ children }: { children: React.ReactNode }) {
     return () => { alive = false; request.current?.abort(); };
   }, []);
   const check = useCallback(async () => {
-    if (Platform.OS !== 'android' || !installed || !settings.repository || busy.current) return;
+    if (Platform.OS !== 'android' || !installed || !settings.repository || busy.current || pendingInstall.current) return;
     busy.current = true;
     const controller = new AbortController(); request.current = controller;
     const token = generation.current;
@@ -64,12 +67,12 @@ export function UpdatesProvider({ children }: { children: React.ReactNode }) {
     if (busy.current) throw new Error('Finish or cancel the current update first.');
     if (next.repository && !validRepository(next.repository)) throw new Error('Use a GitHub repository in the form owner/name.');
     if (Platform.OS === 'android') await SecureStore.setItemAsync(storage, JSON.stringify(next), { keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY });
-    generation.current++; lastCheck.current = 0; setRelease(null); setError(''); setStatus('idle'); setSettings(next);
+    generation.current++; lastCheck.current = 0; setRelease(null); setError(''); setStatus(pendingInstall.current ? 'ready' : 'idle'); setSettings(next);
   }
   async function download() {
     if (!release || busy.current) return;
     busy.current = true; setStatus('downloading'); setError('');
-    try { await native().download(assetUrl(settings.repository, release.version, release.file), release.sha256, release.bytes, release.versionCode); setStatus('ready'); }
+    try { await native().download(assetUrl(settings.repository, release.version, release.file), release.sha256, release.bytes, release.versionCode); pendingInstall.current = true; setStatus('ready'); }
     catch (e) { setStatus('error'); setError(e instanceof Error ? e.message : 'Download failed. Try again.'); }
     finally { busy.current = false; }
   }
@@ -77,7 +80,7 @@ export function UpdatesProvider({ children }: { children: React.ReactNode }) {
     if (busy.current) return;
     busy.current = true; setError('');
     try { setStatus(await native().install()); }
-    catch (e) { setStatus('error'); setError(e instanceof Error ? e.message : 'Couldn’t open the installer. Download the update again.'); }
+    catch (e) { pendingInstall.current = false; setStatus('error'); setError(e instanceof Error ? e.message : 'Couldn’t open the installer. Download the update again.'); }
     finally { busy.current = false; }
   }
   function cancel() { request.current?.abort(); if (Platform.OS === 'android') void native().cancel().catch(() => {}); }

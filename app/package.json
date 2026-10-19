@@ -1,6 +1,6 @@
 {
   "name": "linkup-messenger",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "main": "linkup-entry.js",
   "dependencies": {
     "@config-plugins/react-native-webrtc": "15.0.2",
@@ -66,7 +66,8 @@
     "demo:browser": "node scripts/browser-pair.mjs",
     "demo:nearby": "node scripts/nearby-demo.mjs",
     "start:development": "expo start --dev-client",
-    "build:android:development": "npx eas-cli@latest build --platform android --profile development"
+    "build:android:development": "npx eas-cli@latest build --platform android --profile development",
+    "demo:p2p": "node scripts/p2p-network-demo.mjs"
   },
   "private": true,
   "license": "GPL-3.0-only",

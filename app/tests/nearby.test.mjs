@@ -246,7 +246,7 @@ test('unaccepted contacts, wrong link identity, malformed and oversized packets 
 
 test('nearby-only persists across restart and never falls back to a configured mailbox', async t => {
   const f = await setup(t);
-  await f.alice.connect('https://mailbox.example'); // Attached Nearby handles the sync.
+  await f.portA.transact(async (state) => { const data = JSON.parse(state); data.endpoint = 'https://mailbox.example'; return { state: JSON.stringify(data), result: null }; });
   f.alice.attachNearby(null);
   await f.alice.send(f.b.publicKey, 'Wait for local connection');
   await assert.rejects(f.alice.sync(), /Nearby only/);

@@ -680,3 +680,26 @@ test('simultaneous first call invitations survive competing MLS setup and a send
   await alice.sync(); await f.bob.sync(); await alice.sync(); await f.bob.sync();
   assert.deepEqual(receivedA, [bSignal]); assert.deepEqual(receivedB, [aSignal]);
 });
+
+
+test('connecting a mailbox resumes internet delivery from nearby-only in one step', async t => {
+  const f = await pair(t);
+  await f.alice.setPolicy('nearby-only');
+  await f.alice.send(f.b.publicKey, 'Queued before connecting');
+  await f.alice.connect(f.endpoint);
+  assert.equal((await f.alice.view()).policy, 'automatic');
+  await f.bob.sync(); await f.alice.sync(); await f.bob.sync(); await f.alice.sync();
+  assert.ok((await histories(f.bob, f.a.publicKey)).some(message => message.content === 'Queued before connecting'));
+});
+
+test('invalid addresses and active nearby sessions cannot turn internet delivery on', async () => {
+  const owner = peer(), client = messenger(memoryPort(owner, []));
+  await client.setPolicy('nearby-only');
+  assert.throws(() => client.connect('not a URL'));
+  assert.equal((await client.view()).policy, 'nearby-only');
+  client.attachNearby({ cancel() {} });
+  await assert.rejects(client.connect('https://mail.example.org'), /Stop the nearby session/);
+  assert.equal((await client.view()).policy, 'nearby-only');
+  assert.equal((await client.view()).endpoint, '');
+  client.attachNearby(null);
+});

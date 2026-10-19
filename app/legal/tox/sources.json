@@ -1,0 +1,22 @@
+{
+  "sources": [
+    {
+      "name": "c-toxcore-0.2.23",
+      "url": "https://github.com/TokTok/c-toxcore/releases/download/v0.2.23/c-toxcore-0.2.23.tar.gz",
+      "sha256": "b0349f4829d3d1699a77e199850f870f48d376e2baaf2c69d27b28571c498cfe"
+    },
+    {
+      "name": "libsodium-1.0.22",
+      "url": "https://github.com/jedisct1/libsodium/releases/download/1.0.22-RELEASE/libsodium-1.0.22.tar.gz",
+      "sha256": "adbdd8f16149e81ac6078a03aca6fc03b592b89ef7b5ed83841c086191be3349"
+    },
+    {
+      "name": "cmp-52bfcfa17d2eb4322da2037ad625f5575129cece",
+      "url": "https://codeload.github.com/TokTok/cmp/tar.gz/52bfcfa17d2eb4322da2037ad625f5575129cece",
+      "sha256": "4abfd641dd5ccba04b6e0ced04a79755fa70709290b3ba15dbd4b4a2de345ed0"
+    }
+  ],
+  "ndkVersion": "27.1.12297006",
+  "recipe": "scripts/build-tox.mjs",
+  "audioVideoIncluded": false
+}

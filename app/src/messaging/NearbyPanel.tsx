@@ -20,7 +20,7 @@ function NearbyButton({ label, onPress, disabled = false, secondary = true }: { 
 
 export function NearbyPanel({ initialInput = '', mode = 'all', onFriends }: { initialInput?: string; mode?: 'wifi' | 'bluetooth' | 'vpn' | 'all'; onFriends?: () => void }) {
   const { colors } = useAppearance(), vault = useVault(), messaging = useMessaging(), vpn = useVpn();
-  const [peer, setPeer] = useState(''), [input, setInput] = useState(initialInput), [candidate, setCandidate] = useState<NearbyOffer | null>(null);
+  const [peer, setPeer] = useState(vault.contacts.length === 1 ? vault.contacts[0].publicKey : ''), [input, setInput] = useState(initialInput), [candidate, setCandidate] = useState<NearbyOffer | null>(null);
   const [working, setWorking] = useState(false), [problem, setProblem] = useState(''), [scanning, setScanning] = useState(false), [copied, setCopied] = useState(false);
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   const inAction = useRef(false), scanHandled = useRef(false);
@@ -55,7 +55,7 @@ export function NearbyPanel({ initialInput = '', mode = 'all', onFriends }: { in
   return <View style={{ gap: 18 }}>
     <View style={{ gap: 16 }}>
       <View style={{ ...s.card, flexDirection: 'row', alignItems: 'flex-start' }}><ConnectionIcon name={mode === 'bluetooth' ? 'bluetooth' : mode === 'vpn' ? 'shield' : 'wifi'} size={24} color={colors.brand} /><View style={{ flex: 1, gap: 4 }}><Text style={s.label}>{mode === 'vpn' ? 'Connect a friend privately' : 'Connect nearby'}</Text>
-        <Text style={helper}>{mode === 'vpn' ? 'Both phones need an active private network. Add each other as friends, then share a connection code.' : mode === 'bluetooth' ? 'Exchange encrypted messages over Bluetooth. Add each other as friends first.' : mode === 'wifi' ? 'Use the same Wi-Fi or create a private hotspot. Add each other as friends first.' : 'Use Wi-Fi, a private hotspot or Bluetooth. Add each other as friends first.'}</Text></View></View>
+        <Text style={helper}>{mode === 'vpn' ? 'Both phones need an active private network. Add each other as friends, then share a connection code.' : mode === 'bluetooth' ? 'Exchange encrypted messages over Bluetooth. Add each other as friends first.' : mode === 'wifi' ? 'Add each other as friends on both phones. Connect to the same Wi-Fi, or create a hotspot below. No mailbox or website needed.' : 'Use Wi-Fi, a private hotspot or Bluetooth. Add each other as friends first.'}</Text></View></View>
       {(mode === 'vpn' ? !vpn.status.connected : mode === 'bluetooth' ? !messaging.capabilities.bluetooth : mode === 'wifi' ? !messaging.capabilities.wifi && !messaging.capabilities.hotspot : !messaging.capabilities.wifi && !messaging.capabilities.bluetooth) && <Text style={helper}>{Platform.OS === 'web' ? 'Nearby connections are available in LinkUp for Android. This browser can use an internet mailbox.' : 'This device or build does not support this nearby connection.'}</Text>}
       {unlocked && !active && <>
         <Text style={{ ...text, fontWeight: '600' }}>Choose a friend</Text>
@@ -63,10 +63,10 @@ export function NearbyPanel({ initialInput = '', mode = 'all', onFriends }: { in
         {vault.contacts.map(c => <Pressable key={c.publicKey} accessibilityRole="button" accessibilityLabel={`Connect nearby with ${c.name} ${c.publicKey.slice(0, 8)}`} accessibilityState={{ selected: peer === c.publicKey }} disabled={working} onPress={() => setPeer(c.publicKey)} style={{ minHeight: 58, padding: 16, borderRadius: controlRadius.button, backgroundColor: peer === c.publicKey ? colors.button : colors.soft, justifyContent: 'center' }}><Text style={{ ...text, color: peer === c.publicKey ? colors.onButton : colors.ink, fontWeight: '600' }}>{c.name} · {c.publicKey.slice(0, 8)}</Text></Pressable>)}
       </>}
       {!active && <>
-        <Text style={helper}>One person starts the session. The other scans their nearby code below.</Text>
+        <Text style={helper}>{mode === 'bluetooth' || mode === 'vpn' ? 'One person starts. The other scans their connection code below.' : 'One person taps Start on this Wi-Fi. The other taps Scan a nearby code. You only need to start on one phone.'}</Text>
         {mode === 'vpn' && <NearbyButton label="Start private connection" onPress={() => perform(() => messaging.hostNearby(peer, 'vpn'))} disabled={working || !unlocked || !peer || !vpn.status.connected} secondary={false} />}
-        {mode !== 'bluetooth' && mode !== 'vpn' && <><NearbyButton label="Host on this Wi-Fi" onPress={() => perform(() => messaging.hostNearby(peer, 'wifi'))} disabled={working || !unlocked || !peer || !messaging.capabilities.wifi} secondary={false} />
-          <NearbyButton label="Create a nearby network" onPress={() => perform(() => messaging.hostNearby(peer, 'hotspot'))} disabled={working || !unlocked || !peer || !messaging.capabilities.hotspot} /></>}
+        {mode !== 'bluetooth' && mode !== 'vpn' && <><NearbyButton label="Start on this Wi-Fi" onPress={() => perform(() => messaging.hostNearby(peer, 'wifi'))} disabled={working || !unlocked || !peer || !messaging.capabilities.wifi} secondary={false} />
+          <NearbyButton label="No Wi-Fi? Create a hotspot" onPress={() => perform(() => messaging.hostNearby(peer, 'hotspot'))} disabled={working || !unlocked || !peer || !messaging.capabilities.hotspot} /></>}
         {mode !== 'wifi' && mode !== 'vpn' && <NearbyButton label="Start Bluetooth" onPress={() => perform(() => messaging.hostNearby(peer, 'bluetooth'))} disabled={working || !unlocked || !peer || !messaging.capabilities.bluetooth} secondary={mode === 'all'} />}
       </>}
       {active && <>

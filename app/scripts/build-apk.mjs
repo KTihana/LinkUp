@@ -61,6 +61,7 @@ await chmod(keyFile, 0o600); await chmod(passwordFile, 0o600);
 await run(process.execPath, [join(root, 'scripts/prepare-release.mjs'), '--init']);
 await run(process.execPath, [join(root, 'scripts/build-wireguard.mjs')]);
 await run(process.execPath, [join(root, 'scripts/build-openssl.mjs')]);
+await run(process.execPath, [join(root, 'scripts/build-tox.mjs')]);
 if (!process.argv.includes('--sign-existing')) {
   // JS/style-only updates can reuse native outputs; prebuild still applies config.
   const prebuildArgs = ['prebuild', '--platform', 'android', '--no-install'];
@@ -76,7 +77,7 @@ const entry = JSON.parse(await readFile(join(root, 'package.json'), 'utf8')).mai
 for (const file of ['app.json', 'src/stickers/content.ts', 'src/stickers/create.ts', 'src/design/Workspace.tsx', 'src/appearance/AppearancePanel.tsx', entry, 'src/notifications/register.android.ts', 'src/notifications/backgroundCore.ts',
   'src/notifications/native.ts', 'src/notifications/NotificationsPanel.tsx', 'src/messaging/groups.ts',
   'src/messaging/messenger.ts', 'src/messaging/removeFriend.ts', 'src/messaging/MessagingProvider.tsx', 'src/messaging/nearbyTransport.ts', 'src/messaging/nearbySession.ts', 'src/messaging/NearbyPanel.tsx', 'src/security/VaultProvider.tsx', 'src/security/vaultCore.ts',
-  'modules/common-nearby/index.ts', 'src/calls/CallsProvider.tsx', 'src/vpn/VpnProvider.tsx', 'src/vpn/VpnPanel.tsx', 'src/vpn/native.ts', 'src/vpn/enrollment.ts', 'src/vpn/account.ts', 'src/messaging/mlsEngine.ts', 'src/messaging/mailboxClient.ts', 'src/messaging/nearbyOffer.ts', 'src/calls/mediaCore.ts', 'src/calls/protocol.ts', 'src/updates/release.ts',
+  'modules/common-nearby/index.ts', 'src/calls/CallsProvider.tsx', 'src/vpn/VpnProvider.tsx', 'src/vpn/VpnPanel.tsx', 'src/vpn/native.ts', 'src/vpn/enrollment.ts', 'src/vpn/account.ts', 'src/messaging/mlsEngine.ts', 'src/messaging/mailboxClient.ts', 'src/messaging/nearbyOffer.ts', 'src/messaging/internet/native.ts', 'src/messaging/internet/session.ts', 'src/messaging/internet/identity.ts', 'src/calls/mediaCore.ts', 'src/calls/protocol.ts', 'src/updates/release.ts',
   'src/app/_layout.tsx', 'src/CommonApp.tsx', 'src/appearance/palette.ts', 'src/messaging/ConnectionUI.tsx', 'src/security/eraseAccountCaches.ts', 'src/security/pinUnlock.android.ts', 'src/security/pinUnlockCore.ts', 'src/security/PinPad.tsx', 'src/security/deviceKey.android.ts', 'src/security/passwordUnlock.ts', 'src/security/VaultPanel.tsx']) {
   const index = sourceMap.sources.findIndex(source => source === `/${file}` || source === file || source === join(root, file));
   if (index < 0 || sourceMap.sourcesContent[index] !== await readFile(join(root, file), 'utf8')) {
@@ -145,6 +146,22 @@ await writeFile(join(artifacts, `openssl-${version}-build-provenance.json`), JSO
 if (!nativeBytecode.includes(Buffer.from('NativeCompletionKt'))) throw new Error('APK omits the native cleanup bridge fix.');
 if (!nativeBytecode.includes(Buffer.from('LinkUpPinUnlockModule'))) throw new Error('APK omits native device-bound app PIN protection.');
 if (!nativeBytecode.includes(Buffer.from('LinkUpPhoneUnlockModule')) || !manifest.includes('android.permission.USE_BIOMETRIC')) throw new Error('APK omits the native protected phone-unlock implementation or permission.');
+if (!nativeBytecode.includes(Buffer.from('LinkUpToxModule')) || !fileList.includes('/lib/arm64-v8a/liblinkup_tox.so') || !fileList.includes('/lib/arm64-v8a/libtoxcore.so')) throw new Error('APK omits automatic internet P2P.');
+const toxBuild = JSON.parse(await readFile(join(root, '.native-deps/tox/provenance.json'), 'utf8'));
+const toxEngine = await readFile(join(root, '.native-deps/tox/jni/arm64-v8a/libtoxcore.so'));
+if (createHash('sha256').update(toxEngine).digest('hex') !== toxBuild.engineSha256) throw new Error('Tox source build provenance mismatch.');
+const toxTemp = await mkdtemp(join(artifacts, 'verify-tox-'));
+try {
+  const stripped = join(toxTemp, 'libtoxcore.so');
+  const host = process.platform === 'darwin' ? 'darwin-x86_64' : 'linux-x86_64';
+  await run(join(sdk, 'ndk', toxBuild.ndkVersion, 'toolchains/llvm/prebuilt', host, 'bin/llvm-strip'), ['--strip-unneeded', '-o', stripped, join(root, '.native-deps/tox/jni/arm64-v8a/libtoxcore.so')]);
+  const packaged = await capture('unzip', ['-p', candidateApk, 'lib/arm64-v8a/libtoxcore.so'], true);
+  if (!packaged.equals(toxEngine) && !packaged.equals(await readFile(stripped))) throw new Error('Packaged Tox differs from the verified source build.');
+} finally { await rm(toxTemp, { recursive: true, force: true }); }
+for (const name of await readdir(join(root, 'legal/tox'))) {
+  const bundled = await capture('unzip', ['-p', candidateApk, `assets/tox/${name}`], true);
+  if (!bundled.equals(await readFile(join(root, 'legal/tox', name)))) throw new Error(`APK Tox notice differs: ${name}`);
+}
 await rename(candidateApk, apk);
 // V2/V3 authenticate the distributed APK. Incremental-install sidecars are not
 // distributed; never leave a stale sidecar associated with a rebuilt APK.
@@ -164,6 +181,7 @@ try {
     'deploy/.private/*', 'deploy/.env', 'deploy/certificates/*', 'deploy/vpn-output*/*', 'deploy/vpn/policy*.json',
     'app/modules/*/android/build/*', 'app/modules/*/android/.gradle/*', 'app/modules/*/android/.cxx/*',
     'app/credentials.json', '*.keystore', '*.jks', '*.p12', '*.key', '*.pem', '*.tsbuildinfo', '*.DS_Store'], resolve(root, '..'));
+  for (const source of toxBuild.sources) await run('zip', ['-q', '-j', join(sourceDir, sourceName), join(root, '.native-deps/tox', `${source.name}.tar.gz`)]);
   await rename(join(sourceDir, sourceName), join(artifacts, sourceName));
 } finally { await rm(sourceDir, { recursive: true, force: true }); }
 console.log(`Standalone signed APK: ${apk}\nSHA-256: ${checksum}\nKeep .signing private and backed up to sign compatible future updates.`);

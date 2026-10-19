@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { randomBytes } from 'node:crypto';
 import { ed25519 } from '@noble/curves/ed25519.js';
-import { MailboxClient, MailboxAdmissionError, mailboxURL, envelopeBytes, packageBytes, validateMailEnvelope, validatePublicPackage } from '../src/messaging/mailboxClient.ts';
+import { MailboxClient, MailboxAdmissionError, mailboxURL, mailboxAddressInput, envelopeBytes, packageBytes, validateMailEnvelope, validatePublicPackage } from '../src/messaging/mailboxClient.ts';
 
 const publicKeyFor = seed => Buffer.from(ed25519.getPublicKey(seed)).toString('hex');
 function signedEnvelope(seed, recipient, now) {
@@ -168,4 +168,12 @@ test('key retirement validates exact IDs and requires a bounded owner-only ackno
   assert.deepEqual(JSON.parse(posts[1].body.payload), { ids: ['b'.repeat(32)] });
   retired = 0; await client.retireKeys(['b'.repeat(32)], owner);
   retired = 2; await assert.rejects(client.retireKeys(['b'.repeat(32)], owner), /did not confirm messaging key retirement/);
+});
+
+
+test('pasted mailbox hostnames use HTTPS without accepting email, credentials or website paths', () => {
+  assert.equal(mailboxAddressInput('  mail.example.org  '), 'https://mail.example.org');
+  assert.equal(mailboxAddressInput('mail.example.org:8443/'), 'https://mail.example.org:8443');
+  assert.equal(mailboxAddressInput('https://mail.example.org/'), 'https://mail.example.org');
+  for (const value of ['', '  ', 'user@mail.example.org', 'mail.example.org/path', 'http://mail.example.org', 'mail.example.org?token=x', 'mail example.org']) assert.throws(() => mailboxAddressInput(value));
 });

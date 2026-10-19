@@ -26,6 +26,7 @@ type VaultContextValue = VaultSnapshot & {
   saveProfile: (profile: Profile) => Promise<void>; setOnline: (value: boolean) => Promise<void>;
   createInvite: () => Promise<string>; acceptInvite: (input: string) => Promise<void>;
   removeContact: (publicKey: string) => Promise<void>;
+  withInternetIdentity: (start: (secret: Uint8Array) => Promise<void>) => Promise<void>;
   transactMessaging: <T>(task: MessagingTask<T>) => Promise<T>;
   saveAppearance: (patch: AppearancePatch) => Promise<void>;
   importLegacyAppearance: () => Promise<void>;
@@ -72,7 +73,7 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
     enableBackgroundMessaging: async (baseline = []) => { if (!notificationsNative) throw new Error('Background replies require the Android app.'); try { await controller.enableBackgroundAccess(key => notificationsNative!.enable(key, JSON.stringify(baseline.slice(-1000)))); } catch (e) { await notificationsNative.disable().catch(() => {}); throw e; } },
     enableDeviceUnlock: controller.enableDeviceUnlock, disableDeviceUnlock: controller.disableDeviceUnlock, unlockWithDevice: controller.unlockWithDevice,
     createInvite: controller.createInvite, acceptInvite: controller.acceptInvite, removeContact: controller.removeContact,
-    transactMessaging: controller.transactMessaging,
+    transactMessaging: controller.transactMessaging, withInternetIdentity: controller.withInternetIdentity,
     saveAppearance: controller.saveAppearance, importLegacyAppearance: controller.importLegacyAppearance,
   }}>{children}</Context.Provider>;
 }

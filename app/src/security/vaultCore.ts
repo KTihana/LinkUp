@@ -1,3 +1,4 @@
+import { internetSecretKey } from '../messaging/internet/identity.ts';
 import { xchacha20poly1305 } from '@noble/ciphers/chacha.js';
 import { bytesToHex, hexToBytes, utf8ToBytes } from '@noble/ciphers/utils.js';
 import { ed25519 } from '@noble/curves/ed25519.js';
@@ -631,6 +632,15 @@ export class VaultController {
     return this.updateVault({ profile });
   };
   setOnline = (online: boolean) => this.updateVault({ online });
+  /** Only an unlocked foreground session may start the native internet engine. */
+  withInternetIdentity = async (start: (secret: Uint8Array) => Promise<void>): Promise<void> => {
+    const session = this.session, token = this.revision;
+    this.assertActive(session, token); this.assertForeground(token);
+    const seed = hexToBytes(session.data.identity.seed);
+    const secret = internetSecretKey(seed); seed.fill(0);
+    try { await start(secret); this.assertActive(session, token); this.assertForeground(token); }
+    finally { secret.fill(0); }
+  };
   transactMessaging = async <T,>(task: MessagingTask<T>): Promise<T> => {
     const token = this.revision;
     return this.enqueue(() => this.dependencies.withWrite(async () => {

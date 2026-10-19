@@ -10,7 +10,8 @@
       "expo.modules.commonnearby.LinkUpNotificationsModule",
       "expo.modules.commonnearby.LinkUpPhoneUnlockModule",
       "expo.modules.commonnearby.LinkUpPinUnlockModule",
-      "expo.modules.commonnearby.LinkUpVpnModule"
+      "expo.modules.commonnearby.LinkUpVpnModule",
+      "expo.modules.commonnearby.LinkUpToxModule"
     ]
   }
 }

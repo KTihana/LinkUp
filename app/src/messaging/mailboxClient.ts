@@ -19,6 +19,12 @@ const key = /^[a-f0-9]{64}$/, id = /^[a-f0-9]{32}$/, signature = /^[a-f0-9]{128}
 const verifiedSignatures = new Set<string>();
 const verificationCacheLimit = 512;
 const verificationCacheContext = utf8ToBytes('linkup/public-signature-cache/v1\n');
+/** Accept a pasted service hostname without relaxing stored URL validation. */
+export function mailboxAddressInput(value: string): string {
+  const address = value.trim();
+  if (!address || /\s/.test(address)) throw new Error('Enter the mailbox address shared with you.');
+  return mailboxURL(address.includes('://') ? address : `https://${address}`);
+}
 export function mailboxURL(value: string): string {
   let url: URL;
   try { url = new URL(value.trim()); } catch { throw new Error('Enter a valid HTTPS mailbox address.'); }

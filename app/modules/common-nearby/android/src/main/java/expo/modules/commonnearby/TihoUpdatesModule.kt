@@ -30,7 +30,7 @@ class TihoUpdatesModule : Module() {
   private val busy = AtomicBoolean(false)
   @Volatile private var canceled = false
   @Volatile private var connection: HttpsURLConnection? = null
-  private var verified: Verified? = null
+  @Volatile private var verified: Verified? = null
   private data class Verified(val sha: String, val bytes: Long, val code: Long)
   private val context: Context get() = appContext.reactContext?.applicationContext ?: error("Android application is unavailable.")
   private val folder: File get() = File(context.cacheDir, "updates").also { it.mkdirs() }
@@ -40,7 +40,12 @@ class TihoUpdatesModule : Module() {
     Name("TihoUpdates")
     AsyncFunction("installed") {
       val p = installed()
-      mapOf("version" to (p.versionName ?: ""), "versionCode" to code(p), "packageName" to p.packageName)
+      // The React provider remounts when the vault locks while Android's
+      // install-permission screen is open. Keep the verified download usable
+      // on return; install() still rechecks its digest and signing certificate.
+      val pending = verified
+      val updateReady = !busy.get() && pending != null && pending.code > code(p) && apk.isFile && apk.length() == pending.bytes
+      mapOf("version" to (p.versionName ?: ""), "versionCode" to code(p), "packageName" to p.packageName, "updateReady" to updateReady)
     }
     AsyncFunction("copyVaultKey") Coroutine { value: String ->
       require(value.length <= 100 && Regex("[a-fA-F0-9]{64}").matches(value.replace(Regex("[\\s-]"), ""))) { "Invalid vault key." }

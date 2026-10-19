@@ -1,0 +1,75 @@
+[
+  {
+    "host": "144.217.167.73",
+    "port": 33445,
+    "tcpPorts": [
+      3389,
+      33445
+    ],
+    "publicKey": "7E5668E0EE09E19F320AD47902419331FFEE147BB3606769CFBE921A2A2FD34C"
+  },
+  {
+    "host": "tox1.mf-net.eu",
+    "port": 33445,
+    "tcpPorts": [
+      3389,
+      33445
+    ],
+    "publicKey": "B3E5FA80DC8EBD1149AD2AB35ED8B85BD546DEDE261CA593234C619249419506"
+  },
+  {
+    "host": "tox2.mf-net.eu",
+    "port": 33445,
+    "tcpPorts": [
+      33445,
+      3389
+    ],
+    "publicKey": "70EA214FDE161E7432530605213F18F7427DC773E276B3E317A07531F548545F"
+  },
+  {
+    "host": "144.172.88.203",
+    "port": 33445,
+    "tcpPorts": [
+      33445,
+      443
+    ],
+    "publicKey": "2016A0F2797EE3A8B004BA623F11AAFC8146F1B8F45107232A1A1AECCE856674"
+  },
+  {
+    "host": "172.104.215.182",
+    "port": 33445,
+    "tcpPorts": [
+      33445,
+      443,
+      3389
+    ],
+    "publicKey": "DA2BD927E01CD05EBCC2574EBE5BEBB10FF59AE0B2105A7D1E2B40E49BB20239"
+  },
+  {
+    "host": "tox.initramfs.io",
+    "port": 33445,
+    "tcpPorts": [
+      33445,
+      3389
+    ],
+    "publicKey": "3F0A45A268367C1BEA652F258C85F4A66DA76BCAA667A49E770BCC4917AB6A25"
+  },
+  {
+    "host": "tox3.mf-net.eu",
+    "port": 33445,
+    "tcpPorts": [
+      33445,
+      3389
+    ],
+    "publicKey": "F4FC9398B7167668ED2BCF85634E04D4CDCDD2F95DA5F305BD234888B6E6A771"
+  },
+  {
+    "host": "188.214.122.30",
+    "port": 33445,
+    "tcpPorts": [
+      3389,
+      33445
+    ],
+    "publicKey": "2A9F7A620581D5D1B09B004624559211C5ED3D1D712E8066ACDB0896A7335705"
+  }
+]

@@ -32,7 +32,7 @@ export type EpochRotation = {
   failed?: boolean;
 };
 export type MessagingData = {
-  version: 1; endpoint: string; enabled: boolean; admission?: { peers: string[]; revision: number; endpoint: string }; groups?: Record<string, GroupRecord>; policy?: DeliveryPolicy; nearby?: NearbyStore;
+  version: 1; endpoint: string; enabled: boolean; internetInitialized?: boolean; admission?: { peers: string[]; revision: number; endpoint: string }; groups?: Record<string, GroupRecord>; policy?: DeliveryPolicy; nearby?: NearbyStore;
   conversations: Record<string, { state: string; groupId: string; messages: ChatMessage[]; setupExpiresAt?: number;
     rotation?: EpochRotation; callInvite?: CallSignal & { type: 'invite' };
     retiredGroups?: { groupId: string; expiresAt: number }[] }>;
@@ -98,9 +98,9 @@ export function decodeMessaging(serialized: string | null): MessagingData {
   if (serialized === null) return empty();
   if (typeof serialized !== 'string' || textEncoder.encode(serialized).length > MAX_SAVED_BYTES) throw new Error('Saved messaging data is too large.');
   const value: unknown = JSON.parse(serialized);
-  shape(value, ['version', 'endpoint', 'enabled', 'conversations', 'pending', 'outbox', 'packages', 'seen'], ['policy', 'nearby', 'groups', 'admission']);
+  shape(value, ['version', 'endpoint', 'enabled', 'conversations', 'pending', 'outbox', 'packages', 'seen'], ['policy', 'nearby', 'groups', 'admission', 'internetInitialized']);
   if (JSON.stringify(value) !== serialized || value.version !== 1 || typeof value.endpoint !== 'string'
-    || typeof value.enabled !== 'boolean' || (value.policy !== undefined && !['automatic', 'nearby-only'].includes(value.policy as string))
+    || (value.internetInitialized !== undefined && typeof value.internetInitialized !== 'boolean') || typeof value.enabled !== 'boolean' || (value.policy !== undefined && !['automatic', 'nearby-only'].includes(value.policy as string))
     || (value.endpoint !== '' && mailboxURL(value.endpoint) !== value.endpoint)) throw new Error('Invalid saved mailbox settings.');
   const data = value as unknown as MessagingData;
   if (data.admission !== undefined) {
@@ -363,6 +363,7 @@ export class Messenger {
   private ensureCrypto: () => Promise<void>;
   private nearby: DeliveryTransport | null = null;
   private activeTransport: DeliveryTransport | null = null;
+  private internet: DeliveryTransport | null = null;
   private wakeTransport: MailboxClient | null = null;
   private callConfigTransport: MailboxClient | null = null;
   private callNetworkCache: { endpoint: string; expiresAt: number; value: CallNetwork } | null = null;
@@ -500,6 +501,24 @@ export class Messenger {
     if (this.nearby === transport) return;
     this.invalidate(); this.nearby = transport;
   }
+  attachInternet(transport: DeliveryTransport | null): void {
+    if (this.internet === transport) return;
+    this.invalidate(); this.internet = transport;
+  }
+  initializeInternet(): Promise<void> {
+    return this.operation(token => this.transaction(token, async data => {
+      if (data.internetInitialized) return;
+      data.internetInitialized = true;
+      // Preserve explicit local-only preferences and existing mailbox pause state.
+      if (!data.endpoint && data.policy !== 'nearby-only') data.enabled = true;
+    }));
+  }
+  resumeInternet(): Promise<void> {
+    this.invalidate();
+    return this.operation(token => this.transaction(token, async data => {
+      data.internetInitialized = true; data.enabled = true; data.policy = 'automatic';
+    }));
+  }
   setPolicy(policy: DeliveryPolicy): Promise<void> {
     if (policy !== 'automatic' && policy !== 'nearby-only') return Promise.reject(new Error('Invalid connection preference.'));
     this.invalidate();
@@ -510,12 +529,13 @@ export class Messenger {
   connect(endpoint: string): Promise<void> {
     const address = mailboxURL(endpoint);
     return this.operation(async token => {
+      if (this.nearby) throw new Error('Stop the nearby session before connecting a mailbox.');
       await this.ensureCrypto(); this.current(token);
       await this.transaction(token, async data => {
         if (data.endpoint && data.endpoint !== address && (Object.keys(data.conversations).length || data.outbox.length || data.packages.length)) {
           throw new Error('Changing a mailbox with saved sessions is not supported yet. Reconnect to the existing mailbox.');
         }
-        data.endpoint = address; data.enabled = true; prune(data, this.now());
+        data.endpoint = address; data.enabled = true; data.policy = 'automatic'; prune(data, this.now());
       });
       await this.synchronize(token);
     });
@@ -582,7 +602,7 @@ export class Messenger {
   /** Wait is separate from sync so an open long poll never blocks Send. */
   async waitForMail(): Promise<boolean> {
     const token = this.revision, snapshot = await this.snapshot(token);
-    if (!snapshot.data.enabled || this.nearby || snapshot.data.policy === 'nearby-only' || !snapshot.data.endpoint) return false;
+    if (!snapshot.data.enabled || this.nearby || this.internet || snapshot.data.policy === 'nearby-only' || !snapshot.data.endpoint) return false;
     const client = new MailboxClient(snapshot.data.endpoint, this.fetcher, this.now);
     this.wakeTransport?.cancel(); this.wakeTransport = client;
     try { const ready = await client.wait(snapshot.signer); this.current(token); return ready; }
@@ -598,7 +618,7 @@ export class Messenger {
     }
     if (!snapshot.data.endpoint) {
       if (this.nearby) return { iceServers: [], localOnly: true };
-      throw new Error('Connect a mailbox before calling.');
+      throw new Error(this.internet ? 'Internet P2P messaging is ready. Internet calls still need a calling relay.' : 'Connect a mailbox before calling.');
     }
     if (!refresh && this.callNetworkCache?.endpoint === snapshot.data.endpoint && this.callNetworkCache.expiresAt > this.now() + 5_000) return this.callNetworkCache.value;
     const client = new MailboxClient(snapshot.data.endpoint, this.fetcher, this.now);
@@ -1137,11 +1157,12 @@ export class Messenger {
     await this.ensureCrypto(); this.current(token);
     const snapshot = await this.snapshot(token);
     if (!snapshot.data.enabled) throw new Error('Messaging is paused. Connect nearby or resume your mailbox before syncing.');
-    const location = this.nearby ? 'nearby' : 'mailbox';
+    const direct = this.nearby ?? (snapshot.data.policy !== 'nearby-only' && !snapshot.data.endpoint ? this.internet : null);
+    const location = direct ? 'nearby' : 'mailbox';
     if (!this.nearby && snapshot.data.policy === 'nearby-only') throw new Error('Nearby only is enabled. Connect your friend over local Wi-Fi or Bluetooth; your messages stay queued.');
-    if (!this.nearby && !snapshot.data.endpoint) throw new Error('Connect a mailbox or a nearby friend before syncing.');
+    if (!direct && !snapshot.data.endpoint) throw new Error('Connecting to your friends. Messages stay queued until they are online.');
     // The nearby-only branch above exits before constructing any HTTP client.
-    const client: DeliveryTransport = this.nearby ?? new MailboxClient(snapshot.data.endpoint, this.fetcher, this.now);
+    const client: DeliveryTransport = direct ?? new MailboxClient(snapshot.data.endpoint, this.fetcher, this.now);
     this.activeTransport = client;
     try {
     await this.admit(token, client);

@@ -9,14 +9,14 @@ import { decodeNearbyPacket, decodeNearbyResult, emptyNearbyStore, MAX_NEARBY_PA
   type NearbyAction, type NearbyPacket, type NearbyResult, type NearbyStore } from './nearbyProtocol.ts';
 
 export class NearbyUnavailableError extends MailboxBackpressureError {
-  constructor() { super(); this.message = 'Your nearby friend is out of range. Your message stays queued.'; }
+  constructor() { super(); this.message = 'Your friend is offline or out of range. Your message stays queued.'; }
 }
 export class NearbyKeysUnavailableError extends NoKeyPackageError {
-  constructor() { super(); this.message = 'Connect your nearby friend to start this chat. Your message stays queued.'; }
+  constructor() { super(); this.message = 'Waiting for your friend to connect. Your message stays queued.'; }
 }
 export type NearbyTransportOptions = {
   port: MessagingPort; channel: NearbyPacketChannel; randomBytes: (length: number) => Promise<Uint8Array>;
-  now?: () => number; timeoutMs?: number;
+  now?: () => number; timeoutMs?: number; maxLinks?: number;
   /** Schedule processing after a new encrypted envelope has durably committed. */
   onIncoming?: () => void;
 };
@@ -30,6 +30,7 @@ export class NearbyTransport implements DeliveryTransport {
   private randomBytes: (length: number) => Promise<Uint8Array>;
   private now: () => number;
   private timeoutMs: number;
+  private maxLinks: number;
   private onIncoming?: () => void;
   private revision = 0;
   private rpcRevision = 0;
@@ -43,6 +44,8 @@ export class NearbyTransport implements DeliveryTransport {
   private activeRequests = 0;
   constructor(options: NearbyTransportOptions) {
     this.port = options.port; this.channel = options.channel; this.randomBytes = options.randomBytes;
+    this.maxLinks = options.maxLinks ?? 8;
+    if (!Number.isSafeInteger(this.maxLinks) || this.maxLinks < 1 || this.maxLinks > 100) throw new Error('Invalid friend link limit.');
     this.now = options.now ?? Date.now; this.timeoutMs = options.timeoutMs ?? 60000; this.onIncoming = options.onIncoming;
     if (!Number.isSafeInteger(this.timeoutMs) || this.timeoutMs < 100 || this.timeoutMs > 120000) throw new Error('Invalid nearby request timeout.');
   }
@@ -66,7 +69,7 @@ export class NearbyTransport implements DeliveryTransport {
   }
   attachLink(linkId: string, expectedPeer: string): void {
     if (!this.running || typeof linkId !== 'string' || !linkId.length || linkId.length > 128 || /[\x00-\x1f\x7f]/.test(linkId) || !nearbyKey(expectedPeer)) throw new Error('Invalid nearby friend link.');
-    if (!this.links.has(linkId) && this.links.size >= 8) throw new Error('Too many nearby links.');
+    if (!this.links.has(linkId) && this.links.size >= this.maxLinks) throw new Error('Too many nearby links.');
     const previous = this.links.get(linkId);
     if (previous && previous !== expectedPeer) this.detachLink(linkId);
     this.links.set(linkId, expectedPeer);
