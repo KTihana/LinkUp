@@ -3,11 +3,11 @@
 </p>
 <p align="center">Private conversations with friends.</p>
 <p align="center">
-  <a href="https://github.com/KTihana/LinkUp/releases/latest"><img src="docs/download-android.svg" width="244" height="56" alt="Download LinkUp for Android — latest stable release"></a>
+  <a href="https://github.com/KTihana/LinkUp/releases/download/v0.3.5/tiho-0.3.5-arm64.apk"><img src="docs/download-android.svg" width="244" height="56" alt="Download LinkUp for Android — APK installer"></a>
   &nbsp;
   <a href="https://ktihana.github.io/LinkUp/web/"><img src="docs/open-web.svg" width="210" height="56" alt="Open LinkUp web demo"></a>
 </p>
-<p align="center"><strong>Android 7+ · ARM64</strong><br>Install updates over your existing app to keep your chats.</p>
+<p align="center"><strong>Android 7+ · ARM64</strong><br>Download the APK, then open it on your Android phone and tap Install.<br>Install updates over your existing app to keep your chats.</p>
 
 ## About LinkUp
 
