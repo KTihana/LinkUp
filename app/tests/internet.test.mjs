@@ -71,7 +71,9 @@ test('an explicitly configured mailbox is never silently replaced by the interne
   const owner = identity(), data = decodeMessaging(null); data.endpoint = 'https://mail.example'; data.enabled = true;
   let http = 0, direct = 0;
   const client = new Messenger(port(owner, [], encodeMessaging(data)), random, Date.now, async () => { http++; throw new Error('Expected mailbox request'); }, async () => {});
-  client.attachInternet({ keyStatus() { direct++; throw new Error('Wrong route'); }, receive() { direct++; throw new Error('Wrong route'); } });
-  await assert.rejects(client.sync());
+  // The P2P channel only supplements the mailbox: its local inbox and key pool are read, but nothing is sent to unlinked friends.
+  client.attachInternet({ isLinked: () => false, keyStatus: async () => [], publishKeys: async () => {}, receive: async () => [], acknowledge: async () => {},
+    publish() { direct++; throw new Error('Wrong route'); }, claim() { direct++; throw new Error('Wrong route'); } });
+  await assert.rejects(client.sync(), /Expected mailbox request/);
   assert.ok(http > 0); assert.equal(direct, 0);
 });

@@ -6,6 +6,8 @@ export type DeliveryPolicy = 'automatic' | 'nearby-only';
 export interface DeliveryTransport {
   /** Revoke outstanding requests; already dispatched packets cannot be recalled. */
   cancel?(): void;
+  /** Whether a direct link to this friend is currently connected (direct transports only). */
+  isLinked?(peer: string): boolean;
   publishKeys(packages: PublicPackage[], signer: MailSigner): Promise<void>;
   /** Retire deprecated public setup material without reviving consumed IDs. */
   retireKeys?(ids: string[], signer: MailSigner): Promise<void>;

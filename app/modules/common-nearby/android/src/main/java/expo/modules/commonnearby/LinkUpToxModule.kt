@@ -5,10 +5,12 @@ import androidx.annotation.Keep
 import expo.modules.kotlin.Promise
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
+import java.net.InetAddress
 import java.nio.ByteBuffer
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 import org.json.JSONArray
 
@@ -23,6 +25,10 @@ class LinkUpToxModule : Module() {
   private external fun iterate(handle: Long): Int
   private external fun sendPacket(handle: Long, friend: Int, packet: ByteArray): Boolean
   private val executor = Executors.newSingleThreadScheduledExecutor()
+  // DNS can block for many seconds; resolve off the toxcore executor so iterate/send/stop stay responsive.
+  private val resolver = Executors.newSingleThreadExecutor()
+  private val resolving = AtomicBoolean(false)
+  private var addresses = mapOf<String, List<String>>()
   private val generation = AtomicLong(0)
   private var handle = 0L
   private var timer: ScheduledFuture<*>? = null
@@ -49,21 +55,36 @@ class LinkUpToxModule : Module() {
     if (handle != 0L) { destroy(handle); handle = 0L }
   }
   private fun stop() { generation.incrementAndGet(); executor.execute { stopNative() } }
+  private fun literal(host: String) = host.contains(':') || host.matches(Regex("[0-9.]+"))
+  /** Bootstraps only with IP literals, so toxcore never resolves names on this executor. */
   private fun bootstrapNodes(token: Long) {
     lastBootstrap = now()
     for (i in 0 until nodes.length()) {
-      check(generation.get() == token)
-      val node = nodes.getJSONObject(i); val publicKey = decodeHex(node.getString("publicKey"))
-      bootstrap(handle, node.getString("host"), node.getInt("port"), publicKey, false)
-      val ports = node.getJSONArray("tcpPorts")
-      for (j in 0 until ports.length()) bootstrap(handle, node.getString("host"), ports.getInt(j), publicKey, true)
+      if (generation.get() != token || handle == 0L) return
+      val node = nodes.getJSONObject(i); val publicKey = decodeHex(node.getString("publicKey")); val host = node.getString("host")
+      for (address in if (literal(host)) listOf(host) else addresses[host].orEmpty()) {
+        bootstrap(handle, address, node.getInt("port"), publicKey, false)
+        val ports = node.getJSONArray("tcpPorts")
+        for (j in 0 until ports.length()) bootstrap(handle, address, ports.getInt(j), publicKey, true)
+      }
+    }
+  }
+  private fun resolveNodes(token: Long) {
+    val hosts = (0 until nodes.length()).map { nodes.getJSONObject(it).getString("host") }.filterNot(::literal).distinct()
+    if (hosts.isEmpty() || !resolving.compareAndSet(false, true)) return
+    resolver.execute {
+      val found = try {
+        hosts.associateWith { host -> try { InetAddress.getAllByName(host).mapNotNull { it.hostAddress?.substringBefore('%') }.distinct().take(2) } catch (_: Exception) { emptyList() } }
+      } finally { resolving.set(false) }
+      try { executor.execute { if (generation.get() == token && handle != 0L) { addresses = addresses + found.filterValues { it.isNotEmpty() }; bootstrapNodes(token) } } }
+      catch (_: java.util.concurrent.RejectedExecutionException) { /* Module destroyed. */ }
     }
   }
   private fun tick(token: Long) {
     if (generation.get() != token || handle == 0L) return
     try {
       val interval = iterate(handle).coerceIn(10, 100)
-      if (!connected && now() - lastBootstrap > 30000) bootstrapNodes(token)
+      if (!connected && now() - lastBootstrap > 30000) { bootstrapNodes(token); resolveNodes(token) }
       incoming.entries.removeAll { now() - it.value.created > 30000 }
       // Rotate peers so one congested connection cannot starve another friend.
       repeat(minOf(8, outgoing.size)) {
@@ -129,7 +150,7 @@ class LinkUpToxModule : Module() {
           }
           val context = appContext.reactContext ?: error("Open LinkUp first")
           nodes = JSONArray(context.assets.open("tox/bootstrap.json").bufferedReader().use { it.readText() })
-          bootstrapNodes(token)
+          bootstrapNodes(token); resolveNodes(token)
           check(generation.get() == token)
           tick(token); promise.resolve(null)
         } catch (_: Exception) { stopNative(); promise.reject("P2P_START", "Could not start internet P2P. Reopen LinkUp to retry.", null) }
@@ -155,6 +176,6 @@ class LinkUpToxModule : Module() {
     }
     AsyncFunction("stop") { promise: Promise -> generation.incrementAndGet(); executor.execute { stopNative(); promise.resolve(null) } }
     OnActivityEntersBackground { stop() }
-    OnDestroy { stop(); executor.shutdown() }
+    OnDestroy { stop(); executor.shutdown(); resolver.shutdown() }
   }
 }

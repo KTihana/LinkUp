@@ -56,7 +56,7 @@ The base path applies only to this web build. Nearby Wi-Fi, hotspot and Bluetoot
 
 ## Optional mailbox delivery
 
-Default Android messaging uses Tox and queues messages locally until both friends are online. A custom mailbox is an advanced alternative for store-and-forward delivery; the web client still needs a mailbox. The web demo is not a mailbox.
+Default Android messaging uses Tox and queues messages locally until both friends are online. A custom mailbox is an advanced alternative for store-and-forward delivery; the web client still needs a mailbox. With a mailbox configured, Android keeps internet P2P running too: friends connected over P2P are reached directly, others through the mailbox. The web demo is not a mailbox.
 
 Once an operator deploys the service, set `EXPO_PUBLIC_LINKUP_MAILBOX_URL=https://your-mailbox-host` when building the Android app (or the web client). The Connection screen uses this address by default, so friends only tap Connect and do not have to type an address or change delivery modes. The address is public build configuration, never a password or token. Existing saved mailbox addresses take precedence. Both friends still need to accept each other’s invitation.
 
