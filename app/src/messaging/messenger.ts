@@ -9,6 +9,7 @@ import {
   type MailEnvelope, type MailSigner, type PublicPackage,
 } from './mailboxClient.ts';
 import type { DeliveryTransport, DeliveryPolicy } from './deliveryTransport.ts';
+import { RoutedTransport } from './routedTransport.ts';
 import { validateCallSignal, CALL_SIGNAL_TTL, type CallSignal } from '../calls/protocol.ts';
 import type { CallNetwork } from '../calls/controller.ts';
 import { validateNearbyStore, pruneNearbyStore, type NearbyStore } from './nearbyProtocol.ts';
@@ -375,7 +376,12 @@ export class Messenger {
   };
   private invalidate(): void { this.revision += 1; this.activeTransport?.cancel?.(); this.wakeTransport?.cancel(); this.callConfigTransport?.cancel(); this.activeTransport = null; this.wakeTransport = null; this.callConfigTransport = null; this.callNetworkCache = null; }
   /** Lock/background revokes network jobs without changing encrypted delivery preferences. */
-  suspend(): void { this.invalidate(); }
+  suspend(): void { this.queueRevision += 1; this.invalidate(); }
+  private queueRevision = 0;
+  /** Local queue writes survive route changes (P2P restarts, Pause) and stop only on Lock/background. */
+  private queued(token: number) {
+    if (token !== this.queueRevision) throw new Error('Messaging was disconnected. Pending messages remain saved.');
+  }
   constructor(port: MessagingPort, randomBytes: (length: number) => Promise<Uint8Array>,
     now: () => number = Date.now, fetcher: typeof fetch = fetch,
     ensureCrypto: () => Promise<void> = runtimeCheck) {
@@ -395,19 +401,19 @@ export class Messenger {
     return bytesToHex(generated);
   }
   private transaction<T>(token: number, task: (data: MessagingData, signer: MailSigner,
-    contacts: { publicKey: string; name: string }[]) => Promise<T>): Promise<T> {
-    this.current(token);
+    contacts: { publicKey: string; name: string }[]) => Promise<T>, check: (token: number) => void = value => this.current(value)): Promise<T> {
+    check(token);
     return this.port.transact(async (serialized, signer, contacts) => {
-      this.current(token);
+      check(token);
       const data = decodeMessaging(serialized);
       validateOwner(data, signer);
       // The mailbox challenge is an asynchronous boundary. A retained signer
       // must recheck Pause/Disconnect immediately before signing its response.
       const boundSigner: MailSigner = { publicKey: signer.publicKey, sign: message => {
-        this.current(token); return signer.sign(message);
+        check(token); return signer.sign(message);
       } };
       const result = await task(data, boundSigner, contacts);
-      this.current(token);
+      check(token);
       return { state: encodeMessaging(data), result };
     });
   }
@@ -464,7 +470,7 @@ export class Messenger {
     }
   }
   createGroup(name: string, peers: string[], selfName: string): Promise<string> {
-    const token = this.revision;
+    const token = this.queueRevision, check = (value: number) => this.queued(value);
     return this.transaction(token, async (data, signer, contacts) => {
       if ((Object.keys(data.groups ?? {}).length) >= MAX_GROUPS) throw new Error('The current group limit is five.');
       if (new Set(peers).size !== peers.length || peers.includes(signer.publicKey)) throw new Error('Choose different friends.');
@@ -473,10 +479,10 @@ export class Messenger {
       data.groups ??= {}; data.groups[descriptor.id] = { descriptor, status: 'joined', departed: [] };
       this.queueGroup(data, signer.publicKey, contacts, { group: descriptor, event: 'invite', kind: 'text', text: '' }, await this.id(), this.now());
       return descriptor.id;
-    });
+    }, check);
   }
   answerGroup(id: string, join: boolean): Promise<void> {
-    const token = this.revision;
+    const token = this.queueRevision, check = (value: number) => this.queued(value);
     return this.transaction(token, async (data, signer, contacts) => {
       const group = data.groups?.[id];
       if (!group || group.status === 'left') throw new Error('This invitation is no longer available.');
@@ -484,17 +490,17 @@ export class Messenger {
       this.queueGroup(data, signer.publicKey, contacts, { group: group.descriptor, event: join ? 'accept' : 'leave', kind: 'text', text: '' }, await this.id(), this.now());
       group.status = join ? 'joined' : 'left';
       if (!join && !group.departed.includes(signer.publicKey)) group.departed.push(signer.publicKey);
-    });
+    }, check);
   }
   sendGroup(id: string, content: string, kind: 'text' | 'sticker' = 'text', requestId?: string): Promise<void> {
-    const token = this.revision;
+    const token = this.queueRevision, check = (value: number) => this.queued(value);
     return this.transaction(token, async (data, signer, contacts) => {
       const group = data.groups?.[id];
       if (!group || group.status !== 'joined' || group.departed.includes(signer.publicKey)) throw new Error('Join this group before sending.');
       if (!contentValid(kind, content)) throw new Error('Invalid group message.');
       if (requestId !== undefined && !validId(requestId)) throw new Error('Invalid reply ID.');
       this.queueGroup(data, signer.publicKey, contacts, { group: group.descriptor, event: 'message', kind, text: content }, requestId ?? await this.id(), this.now());
-    });
+    }, check);
   }
   /** Changing routes revokes retained signing capabilities before any next request. */
   attachNearby(transport: DeliveryTransport | null): void {
@@ -573,11 +579,11 @@ export class Messenger {
     // Local queue writes use the vault's transaction serializer rather than
     // waiting behind the network operation queue. Typing/sending can continue
     // while a poll is awaiting its HTTP response.
-    const token = this.revision;
+    const token = this.queueRevision, check = (value: number) => this.queued(value);
     return (async () => {
-      this.current(token);
+      check(token);
       if (requestId !== undefined && !validId(requestId)) throw new Error('Invalid reply ID.');
-      const id = requestId ?? await this.id(), createdAt = this.now(); this.current(token);
+      const id = requestId ?? await this.id(), createdAt = this.now(); check(token);
       const payload: ChatPayload = { version: 1, type: 'chat', id, kind, content, createdAt };
       if (!contentValid(kind, content) || textEncoder.encode(JSON.stringify(payload)).length > MAX_MESSAGE_BYTES) {
         throw new Error('Messages are limited to 8 KiB including metadata. Choose a valid custom sticker for sticker messages.');
@@ -593,7 +599,7 @@ export class Messenger {
         if (messageCount(data) >= 500) throw new Error('The development chat history limit is 500 messages.');
         data.conversations[peer].messages.push({ id, content, mine: true, kind, createdAt, expiresAt: createdAt + TTL, status: 'queued' });
         data.pending.push({ peer, messageId: id, expiresAt: createdAt + TTL });
-      });
+      }, check);
       // Send returns after durable queueing. The UI controls background Sync;
       // explicit Sync reports transport failures without discarding the queue.
     })();
@@ -602,7 +608,8 @@ export class Messenger {
   /** Wait is separate from sync so an open long poll never blocks Send. */
   async waitForMail(): Promise<boolean> {
     const token = this.revision, snapshot = await this.snapshot(token);
-    if (!snapshot.data.enabled || this.nearby || this.internet || snapshot.data.policy === 'nearby-only' || !snapshot.data.endpoint) return false;
+    // Internet P2P wakes sync itself; the mailbox long poll still runs alongside it.
+    if (!snapshot.data.enabled || this.nearby || snapshot.data.policy === 'nearby-only' || !snapshot.data.endpoint) return false;
     const client = new MailboxClient(snapshot.data.endpoint, this.fetcher, this.now);
     this.wakeTransport?.cancel(); this.wakeTransport = client;
     try { const ready = await client.wait(snapshot.signer); this.current(token); return ready; }
@@ -1158,19 +1165,33 @@ export class Messenger {
     const snapshot = await this.snapshot(token);
     if (!snapshot.data.enabled) throw new Error('Messaging is paused. Connect nearby or resume your mailbox before syncing.');
     const direct = this.nearby ?? (snapshot.data.policy !== 'nearby-only' && !snapshot.data.endpoint ? this.internet : null);
+    // A configured mailbox stays the route for mailbox friends; internet P2P additionally reaches friends without one.
+    const supplement = !this.nearby && snapshot.data.policy !== 'nearby-only' && snapshot.data.endpoint ? this.internet : null;
     const location = direct ? 'nearby' : 'mailbox';
     if (!this.nearby && snapshot.data.policy === 'nearby-only') throw new Error('Nearby only is enabled. Connect your friend over local Wi-Fi or Bluetooth; your messages stay queued.');
     if (!direct && !snapshot.data.endpoint) throw new Error('Connecting to your friends. Messages stay queued until they are online.');
     // The nearby-only branch above exits before constructing any HTTP client.
-    const client: DeliveryTransport = direct ?? new MailboxClient(snapshot.data.endpoint, this.fetcher, this.now);
-    this.activeTransport = client;
+    const mailbox = direct ? null : new MailboxClient(snapshot.data.endpoint, this.fetcher, this.now);
+    let activeClient: DeliveryTransport | null = direct ?? (supplement ? new RoutedTransport(supplement, mailbox) : mailbox);
+    this.activeTransport = activeClient;
     try {
-    await this.admit(token, client);
+    let supplementWarning: string | undefined, mailboxError: unknown;
+    if (supplement) {
+      // The P2P inbox and key pool are local, so they progress even while the mailbox is unreachable.
+      supplementWarning = await this.incoming(token, supplement);
+      supplementWarning = await this.keyPool(token, supplement, 'nearby') ?? supplementWarning;
+    }
+    if (mailbox) {
+      try { await this.admit(token, mailbox); }
+      catch (error) { this.current(token); if (!supplement) throw error; mailboxError = error; }
+    }
+    const client: DeliveryTransport = direct ?? (supplement ? new RoutedTransport(supplement, mailboxError ? null : mailbox) : mailbox!);
+    this.activeTransport = activeClient = client;
     const busyRecipients = new Set<string>();
     await this.queueEpochRetries(token);
     const firstFlushWarning = await this.flush(token, client, busyRecipients);
-    const incomingWarning = await this.incoming(token, client);
-    const poolWarning = await this.keyPool(token, client, location);
+    const incomingWarning = await this.incoming(token, client) ?? supplementWarning;
+    const poolWarning = mailboxError ? undefined : await this.keyPool(token, client, location);
     const rotationWarning = await this.rotateKeys(token);
     const prepareWarning = await this.prepare(token, client);
     const flushWarning = await this.flush(token, client, busyRecipients);
@@ -1181,7 +1202,8 @@ export class Messenger {
       conversation.setupExpiresAt !== undefined && conversation.setupExpiresAt <= this.now())
       ? 'The initial chat setup expired. Both devices need to reconnect this chat, then one friend sends first.' : undefined;
     const warning = incomingWarning ?? rotationWarning ?? prepareWarning ?? busyWarning ?? poolWarning ?? setupWarning;
+    if (mailboxError) throw mailboxError;
     if (warning) throw new Error(warning);
-    } finally { if (this.activeTransport === client) this.activeTransport = null; }
+    } finally { if (this.activeTransport === activeClient) this.activeTransport = null; }
   }
 }

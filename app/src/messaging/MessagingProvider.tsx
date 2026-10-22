@@ -67,7 +67,8 @@ export function MessagingProvider({ children }: { children: React.ReactNode }) {
   const [foreground, setForeground] = useState(AppState.currentState !== 'background');
   useEffect(() => { internetSession.setSyncListener(() => { void sync(); }); return () => internetSession.setSyncListener(() => {}); }, [internetSession, sync]);
   useEffect(() => {
-    const listener = AppState.addEventListener('change', state => { setForeground(state === 'active'); if (state !== 'active') void internetSession.stop(); });
+    // The native engine stops on background; restart on every resume, even if the foreground flag never flipped in React.
+    const listener = AppState.addEventListener('change', state => { setForeground(state === 'active'); if (state === 'active') setInternetRestart(value => value + 1); else void internetSession.stop(); });
     return () => { listener.remove(); void internetSession.stop(); };
   }, [internetSession]);
   useEffect(() => watchSessionVisibility(() => { void internetSession.stop(); }), [internetSession]);
@@ -77,7 +78,7 @@ export function MessagingProvider({ children }: { children: React.ReactNode }) {
   const friendKeys = vault.contacts.map(contact => contact.publicKey).sort().join(',');
   const withInternetIdentity = vault.withInternetIdentity;
   useEffect(() => {
-    if (!internetNative || !foreground || vault.status !== 'unlocked' || policyGeneration !== vault.generation || !view.enabled || view.policy === 'nearby-only' || view.endpoint || nearby.phase !== 'idle' || vpn.status.connected || vpn.status.connecting) {
+    if (!internetNative || !foreground || vault.status !== 'unlocked' || policyGeneration !== vault.generation || !view.enabled || view.policy === 'nearby-only' || nearby.phase !== 'idle' || vpn.status.connected || vpn.status.connecting) {
       void internetSession.stop(); return;
     }
     void internetSession.start(withInternetIdentity, friendKeys ? friendKeys.split(',').map(publicKey => ({ publicKey })) : []);

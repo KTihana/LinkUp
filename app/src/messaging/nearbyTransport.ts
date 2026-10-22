@@ -8,6 +8,7 @@ import { decodeNearbyPacket, decodeNearbyResult, emptyNearbyStore, MAX_NEARBY_PA
   nearbyResponseBytes, nearbyShape, packetHash, pruneNearbyStore, verifyNearbySignature,
   type NearbyAction, type NearbyPacket, type NearbyResult, type NearbyStore } from './nearbyProtocol.ts';
 
+const CLOCK_SKEW_MS = 5 * 60 * 1000;
 export class NearbyUnavailableError extends MailboxBackpressureError {
   constructor() { super(); this.message = 'Your friend is offline or out of range. Your message stays queued.'; }
 }
@@ -74,6 +75,7 @@ export class NearbyTransport implements DeliveryTransport {
     if (previous && previous !== expectedPeer) this.detachLink(linkId);
     this.links.set(linkId, expectedPeer);
   }
+  isLinked(peer: string): boolean { return this.running && [...this.links.values()].includes(peer); }
   detachLink(linkId: string): void {
     this.links.delete(linkId); this.writers.delete(linkId); this.rates.delete(linkId);
     for (const [id, pending] of this.pending) if (pending.linkId === linkId) {
@@ -148,16 +150,27 @@ export class NearbyTransport implements DeliveryTransport {
     active();
     const link = [...this.links.entries()].reverse().find(([, expected]) => expected === peer)?.[0];
     if (!link) throw action === 'publish' ? new NearbyUnavailableError() : new NearbyKeysUnavailableError();
-    const challengePacket: NearbyPacket = { version: 1, id: await this.random(16), type: 'challenge', publicKey: signer.publicKey, action };
-    active(); const challenge = await this.exchange(link, peer, challengePacket);
-    active(); nearbyShape(challenge, ['challenge', 'expiresAt']);
-    if (typeof challenge.challenge !== 'string' || !/^[a-f0-9]{48}$/.test(challenge.challenge) || !Number.isSafeInteger(challenge.expiresAt)
-      || (challenge.expiresAt as number) <= this.now() || (challenge.expiresAt as number) > this.now() + 60000) throw new Error('Invalid nearby challenge.');
-    const requestId = await this.random(16); active();
-    const payload = JSON.stringify(payloadValue), request: NearbyPacket = { version: 1, id: requestId, type: 'request',
-      publicKey: signer.publicKey, action, challenge: challenge.challenge, payload,
-      signature: signer.sign(requestBytes(`/v1/${action}`, challenge.challenge, payload)) };
-    active(); return this.exchange(link, peer, request);
+    try {
+      const challengePacket: NearbyPacket = { version: 1, id: await this.random(16), type: 'challenge', publicKey: signer.publicKey, action };
+      active(); const challenge = await this.exchange(link, peer, challengePacket);
+      active(); nearbyShape(challenge, ['challenge', 'expiresAt']);
+      // The responder sets and enforces expiry with its own clock; allow ordinary phone clock skew here.
+      if (typeof challenge.challenge !== 'string' || !/^[a-f0-9]{48}$/.test(challenge.challenge) || !Number.isSafeInteger(challenge.expiresAt)
+        || (challenge.expiresAt as number) <= this.now() - CLOCK_SKEW_MS || (challenge.expiresAt as number) > this.now() + 60000 + CLOCK_SKEW_MS) throw new Error('Invalid nearby challenge.');
+      const requestId = await this.random(16); active();
+      const payload = JSON.stringify(payloadValue), request: NearbyPacket = { version: 1, id: requestId, type: 'request',
+        publicKey: signer.publicKey, action, challenge: challenge.challenge, payload,
+        signature: signer.sign(requestBytes(`/v1/${action}`, challenge.challenge, payload)) };
+      active(); return await this.exchange(link, peer, request);
+    } catch (error) {
+      // Stop/Lock still aborts the caller. Any other link failure affects only this friend,
+      // so Messenger skips them for this round instead of stalling delivery to everyone.
+      if (!this.running || token !== this.revision || rpcToken !== this.rpcRevision) throw error;
+      if (action === 'publish' ? error instanceof MailboxBackpressureError : error instanceof NoKeyPackageError) throw error;
+      const unavailable = action === 'publish' ? new NearbyUnavailableError() : new NearbyKeysUnavailableError();
+      if (error instanceof Error) unavailable.message = error.message;
+      throw unavailable;
+    }
   }
   async claim(owner: string, signer: MailSigner): Promise<PublicPackage> {
     const result = await this.request(owner, 'keys-claim', { owner }, signer); nearbyShape(result, ['package']);
